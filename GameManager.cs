@@ -14,6 +14,7 @@ public class GameManager : MonoBehaviour
     public Transform effectGroup;
 
     public int maxLevel;
+    public int score;
 
     void Awake()
     {

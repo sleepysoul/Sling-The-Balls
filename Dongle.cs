@@ -76,6 +76,8 @@ public class Dongle : MonoBehaviour
             yield return null;
         }
 
+        manager.score += (int)(Mathf.Pow(2, level)) * 100;
+
         isMerge = false;
         this.gameObject.SetActive(false);
     }
