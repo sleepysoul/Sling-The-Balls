@@ -5,7 +5,10 @@ using UnityEngine.SceneManagement;
 
 public class GameManager : MonoBehaviour
 {
-    public Dongle lastDongle;    
+    public int maxLevel;
+    public int score;
+
+    public Dongle lastDongle;
     public Rigidbody2D hookRb;
 
     public GameObject donglePrefab;
@@ -13,12 +16,16 @@ public class GameManager : MonoBehaviour
     public GameObject effectPrefab;
     public Transform effectGroup;
 
-    public int maxLevel;
-    public int score;
+    public AudioSource bgmPlayer;
+    public AudioSource[] sfxPlayer;
+    public AudioClip[] sfxClip;
+    public int sfxCursor;
+    public enum Sfx { LevelUp , Next , GameOver , Attach , Button }
 
     void Awake()
     {
         Application.targetFrameRate = 60;
+        bgmPlayer.Play();
     }
 
     void Start()
@@ -49,6 +56,7 @@ public class GameManager : MonoBehaviour
         lastDongle.level = Random.Range(0, maxLevel);
         lastDongle.gameObject.SetActive(true);
 
+        SfxPlay(Sfx.Next);
         StartCoroutine("WaitNext");
     }
 
@@ -85,5 +93,29 @@ public class GameManager : MonoBehaviour
     public void Reset()
     {
         SceneManager.LoadScene("main");
+    }
+
+    public void SfxPlay(Sfx type)
+    {
+        switch (type) {
+            case Sfx.LevelUp:
+                sfxPlayer[sfxCursor].clip = sfxClip[Random.Range(0, 3)];
+                break;
+            case Sfx.Next:
+                sfxPlayer[sfxCursor].clip = sfxClip[3];
+                break;
+            case Sfx.GameOver:
+                sfxPlayer[sfxCursor].clip = sfxClip[4];
+                break;
+            case Sfx.Attach:
+                sfxPlayer[sfxCursor].clip = sfxClip[5];
+                break;
+            case Sfx.Button:
+                sfxPlayer[sfxCursor].clip = sfxClip[6];
+                break;
+        } // end of switch
+        
+        sfxPlayer[sfxCursor].Play();
+        sfxCursor = (sfxCursor + 1) % sfxPlayer.Length;
     }
 }

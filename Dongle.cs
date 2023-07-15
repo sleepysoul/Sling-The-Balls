@@ -19,6 +19,7 @@ public class Dongle : MonoBehaviour
 
     public bool isPressed = false;
     public bool isMerge;
+    public bool isAttach;
 
     void Awake()
     {
@@ -56,6 +57,25 @@ public class Dongle : MonoBehaviour
             }            
         }
     }
+
+/*
+    void OnCollisionStay2D(Collision2D collision)
+    {
+        if (isAttach) {
+            return;
+        }
+
+        isAttach = true;
+        manager.SfxPlay(GameManager.Sfx.Attach);
+        StartCoroutine(AttachRoutine());
+    }
+
+    IEnumerator AttachRoutine()
+    {
+        yield return new WaitForSeconds(0.2f);
+        isAttach = false;
+    }
+*/
 
     public void Hide(Vector3 targetPos)
     {
@@ -100,6 +120,7 @@ public class Dongle : MonoBehaviour
         // 레벨업 애니메이션 구동
         anim.SetInteger("Level", level + 1);
         EffectPlay();
+        manager.SfxPlay(GameManager.Sfx.LevelUp);
 
         // 레벨업 애니메이션 구동 시간 대기
         yield return new WaitForSeconds(0.2f);
