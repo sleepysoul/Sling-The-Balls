@@ -33,6 +33,24 @@ public class Dongle : MonoBehaviour
         anim.SetInteger("Level", level);
     }
 
+    void OnDisable()
+    {
+        // 동글 속성 초기화
+        level = 0;
+        isPressed = false;
+        isMerge = false;
+        isAttach = false;
+        // 동글 트랜스폼 초기화
+        transform.localPosition = Vector3.zero;
+        transform.localRotation = Quaternion.identity;
+        transform.localScale = Vector3.zero;
+        // 동글 물리 초기화
+        rb.simulated = false;
+        rb.velocity = Vector2.zero;
+        rb.angularVelocity = 0;
+        circle.enabled = true;
+    }
+
     void OnCollisionEnter2D(Collision2D collision)
     {
         // 충돌 감지하면 상대 동글 클래스 가져오기
@@ -56,11 +74,7 @@ public class Dongle : MonoBehaviour
                 }
             }            
         }
-    }
 
-/*
-    void OnCollisionStay2D(Collision2D collision)
-    {
         if (isAttach) {
             return;
         }
@@ -75,7 +89,6 @@ public class Dongle : MonoBehaviour
         yield return new WaitForSeconds(0.2f);
         isAttach = false;
     }
-*/
 
     public void Hide(Vector3 targetPos)
     {

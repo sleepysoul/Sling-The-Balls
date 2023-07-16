@@ -5,17 +5,24 @@ using UnityEngine.SceneManagement;
 
 public class GameManager : MonoBehaviour
 {
+    [Header("===========[ Core ]")]
     public int maxLevel;
     public int score;
 
-    public Dongle lastDongle;
+    [Header("===========[ Obejct Pooling ]")]
     public Rigidbody2D hookRb;
-
     public GameObject donglePrefab;
     public Transform dongleGroup;
+    public List<Dongle> donglePool;
     public GameObject effectPrefab;
     public Transform effectGroup;
+    public List<ParticleSystem> effectPool;
+    [Range(1, 30)]
+    public int poolSize;
+    public int poolCursor;
+    public Dongle lastDongle;
 
+    [Header("===========[ Audio System ]")]
     public AudioSource bgmPlayer;
     public AudioSource[] sfxPlayer;
     public AudioClip[] sfxClip;
@@ -26,6 +33,13 @@ public class GameManager : MonoBehaviour
     {
         Application.targetFrameRate = 60;
         bgmPlayer.Play();
+
+        donglePool = new List<Dongle>();
+        effectPool = new List<ParticleSystem>();
+        for (int index=0; index < poolSize; index++) {
+            MakeDongle();
+        }
+
     }
 
     void Start()
@@ -33,26 +47,43 @@ public class GameManager : MonoBehaviour
         NextDongle();
     }
 
+    Dongle MakeDongle()
+    {
+        GameObject instantEffectObj = Instantiate(effectPrefab, effectGroup);
+        instantEffectObj.name = "Effect " + effectPool.Count;
+        ParticleSystem instantEffect = instantEffectObj.GetComponent<ParticleSystem>();
+        effectPool.Add(instantEffect);
+
+        GameObject instantDongleObj = Instantiate(donglePrefab, dongleGroup);
+        instantDongleObj.name = "Dongle " + donglePool.Count;
+        Dongle instantDongle = instantDongleObj.GetComponent<Dongle>();
+        instantDongle.manager = this;
+        instantDongle.hook = hookRb;
+        instantDongle.GetComponent<SpringJoint2D>().connectedBody = hookRb;
+        instantDongle.effect = instantEffect;
+        donglePool.Add(instantDongle);
+
+        return instantDongle;
+    }
+
     // 동글 생성
     Dongle GetDongle()
     {
-        GameObject instantEffectObj = Instantiate(effectPrefab, effectGroup);
-        ParticleSystem instantEffect = instantEffectObj.GetComponent<ParticleSystem>();
+        for (int index = 0;  index < donglePool.Count; index++) {
+            // poolCursor++; => donglePool.count 를 넘어가면 Out of indexing 오류 발생
+            poolCursor = (poolCursor + 1) % donglePool.Count;
+            if (!donglePool[poolCursor].gameObject.activeSelf) {
+                return donglePool[poolCursor];
+            }
+        }
 
-        GameObject instantDongleObj = Instantiate(donglePrefab, dongleGroup);
-        Dongle instantDongle = instantDongleObj.GetComponent<Dongle>();
-        instantDongle.manager = this;
-        instantDongle.hook = hookRb;        
-        instantDongle.GetComponent<SpringJoint2D>().connectedBody = hookRb;
-        instantDongle.effect = instantEffect;
-        return instantDongle;
+        return MakeDongle();
     }
 
     // 동글 가져오기
     void NextDongle()
     {
-        Dongle newDongle = GetDongle();
-        lastDongle = newDongle;
+        lastDongle = GetDongle();
         lastDongle.level = Random.Range(0, maxLevel);
         lastDongle.gameObject.SetActive(true);
 
