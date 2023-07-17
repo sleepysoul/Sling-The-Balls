@@ -45,9 +45,9 @@ public class Dongle : MonoBehaviour
         transform.localRotation = Quaternion.identity;
         transform.localScale = Vector3.zero;
         // 동글 물리 초기화
-        rb.simulated = false;
-        rb.velocity = Vector2.zero;
-        rb.angularVelocity = 0;
+        rb.simulated = true;
+        // rb.velocity = Vector2.zero;
+        // rb.angularVelocity = 0;
         circle.enabled = true;
     }
 

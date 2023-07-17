@@ -2,6 +2,7 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.SceneManagement;
+using UnityEngine.UI;
 
 public class GameManager : MonoBehaviour
 {
@@ -29,6 +30,11 @@ public class GameManager : MonoBehaviour
     public int sfxCursor;
     public enum Sfx { LevelUp , Next , GameOver , Attach , Button }
 
+    [Header("===========[ UI ]")]
+    public Text scoreText;
+    public Text maxScoreText;
+
+
     void Awake()
     {
         Application.targetFrameRate = 60;
@@ -47,7 +53,7 @@ public class GameManager : MonoBehaviour
         NextDongle();
     }
 
-    Dongle MakeDongle()
+    public Dongle MakeDongle()
     {
         GameObject instantEffectObj = Instantiate(effectPrefab, effectGroup);
         instantEffectObj.name = "Effect " + effectPool.Count;
@@ -69,7 +75,7 @@ public class GameManager : MonoBehaviour
     // 동글 생성
     Dongle GetDongle()
     {
-        for (int index = 0;  index < donglePool.Count; index++) {
+        for (int index=0; index < donglePool.Count; index++) {
             // poolCursor++; => donglePool.count 를 넘어가면 Out of indexing 오류 발생
             poolCursor = (poolCursor + 1) % donglePool.Count;
             if (!donglePool[poolCursor].gameObject.activeSelf) {
@@ -83,7 +89,8 @@ public class GameManager : MonoBehaviour
     // 동글 가져오기
     void NextDongle()
     {
-        lastDongle = GetDongle();
+        Dongle newDongle = GetDongle();
+        lastDongle = newDongle; 
         lastDongle.level = Random.Range(0, maxLevel);
         lastDongle.gameObject.SetActive(true);
 
@@ -148,5 +155,10 @@ public class GameManager : MonoBehaviour
         
         sfxPlayer[sfxCursor].Play();
         sfxCursor = (sfxCursor + 1) % sfxPlayer.Length;
+    }
+
+    void LateUpdate()
+    {
+        scoreText.text = score.ToString();
     }
 }
