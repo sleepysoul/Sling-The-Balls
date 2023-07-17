@@ -13,9 +13,9 @@ public class Dongle : MonoBehaviour
     public CircleCollider2D circle;
     public Animator anim;
 
+    public int level;
     public float releaseTime = .15f;
     public float maxDragDistance = 4f;
-    public int level;
 
     public bool isPressed = false;
     public bool isMerge;
@@ -45,9 +45,10 @@ public class Dongle : MonoBehaviour
         transform.localRotation = Quaternion.identity;
         transform.localScale = Vector3.zero;
         // 동글 물리 초기화
+        GetComponent<SpringJoint2D>().enabled = true;
         rb.simulated = true;
-        // rb.velocity = Vector2.zero;
-        // rb.angularVelocity = 0;
+        rb.velocity = Vector2.zero;
+        rb.angularVelocity = 0;
         circle.enabled = true;
     }
 
@@ -105,10 +106,19 @@ public class Dongle : MonoBehaviour
         int frameCount = 0;
         while (frameCount < 20) {
             frameCount++;
-            transform.position = Vector3.Lerp(transform.position, targetPos, 0.5f);
+
+            if (targetPos != Vector3.up * 100) {
+                transform.position = Vector3.Lerp(transform.position, targetPos, 0.5f);
+
+            }
+            if (targetPos == Vector3.up * 100) {
+                EffectPlay();
+                transform.localScale = Vector3.Lerp(transform.localScale, Vector3.zero, 0.5f);
+            }
+
             yield return null;
         }
-
+        
         manager.score += (int)(Mathf.Pow(2, level)) * 100;
 
         isMerge = false;
@@ -154,6 +164,18 @@ public class Dongle : MonoBehaviour
                 rb.position = hook.position + (mousePos - hook.position).normalized * maxDragDistance;
             else 
                 rb.position = mousePos;            
+        }
+    }
+
+    void OnTriggerExit2D(Collider2D collision)
+    {
+        if (collision.tag == "Finish") {
+
+            manager.health -= 1;
+
+            if (manager.health == 0) {
+                manager.GameOver();
+            }
         }
     }
 

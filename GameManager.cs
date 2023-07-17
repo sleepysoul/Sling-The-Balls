@@ -7,8 +7,10 @@ using UnityEngine.UI;
 public class GameManager : MonoBehaviour
 {
     [Header("===========[ Core ]")]
+    public bool isOver;
     public int maxLevel;
     public int score;
+    public int health;
 
     [Header("===========[ Obejct Pooling ]")]
     public Rigidbody2D hookRb;
@@ -32,7 +34,12 @@ public class GameManager : MonoBehaviour
 
     [Header("===========[ UI ]")]
     public Text scoreText;
-    public Text maxScoreText;
+    public Text highScoreText;
+    public Text subScoreText;
+    public GameObject endGroup;
+
+    [Header("===========[ ETC ]")]
+    public GameObject line;
 
 
     void Awake()
@@ -130,6 +137,15 @@ public class GameManager : MonoBehaviour
 
     public void Reset()
     {
+        SfxPlay(Sfx.Button);
+
+        StartCoroutine(ResetRoutine());
+    }
+
+    IEnumerator ResetRoutine()
+    {
+        yield return new WaitForSeconds(0.5f);
+
         SceneManager.LoadScene("main");
     }
 
@@ -155,6 +171,42 @@ public class GameManager : MonoBehaviour
         
         sfxPlayer[sfxCursor].Play();
         sfxCursor = (sfxCursor + 1) % sfxPlayer.Length;
+    }
+
+    public void GameOver()
+    {
+        Debug.Log("Over!");
+        if (isOver) {
+            Debug.Log("isOver return!"); return;
+        }
+
+        isOver = true;
+        StartCoroutine(GameOverRoutine());
+    }
+
+    IEnumerator GameOverRoutine()
+    {
+        // 1. 장면 안에 활성화 되어 있는 모든 동글 가져오기
+        Dongle[] dongles = GameObject.FindObjectsOfType<Dongle>();
+
+        // 2. 지우기 전에 모든 동글의 물리효과 비활성화
+        for (int index=0; index < dongles.Length; index++) {
+            dongles[index].rb.simulated = false;
+        }
+
+        // 3. 1번 목록을 하나씩 접근하여 지우기
+        for (int index=0; index < dongles.Length; index++) {
+            dongles[index].Hide(Vector3.up * 100);
+            yield return new WaitForSeconds(0.1f);
+        }
+
+        yield return new WaitForSeconds(0.5f);
+        SfxPlay(Sfx.GameOver);
+
+        subScoreText.text = "SCORE : " + scoreText.text;
+        PlayerPrefs.SetInt("HighScore", score);
+        highScoreText.text = "HIGHSCORE : " + Mathf.Max(score, PlayerPrefs.GetInt("HighScore")).ToString();
+        endGroup.gameObject.SetActive(true);
     }
 
     void LateUpdate()
