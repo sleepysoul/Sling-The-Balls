@@ -145,7 +145,7 @@ public class GameManager : MonoBehaviour
     {
         yield return new WaitForSeconds(0.5f);
 
-        SceneManager.LoadScene("main");
+        SceneManager.LoadScene(SceneManager.GetActiveScene().buildIndex);
     }
 
     public void SfxPlay(Sfx type)
@@ -174,9 +174,8 @@ public class GameManager : MonoBehaviour
 
     public void GameOver()
     {
-        Debug.Log("Over!");
         if (isOver) {
-            Debug.Log("isOver return!"); return;
+            return;
         }
 
         isOver = true;

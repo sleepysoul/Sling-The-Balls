@@ -82,6 +82,7 @@ public class Dongle : MonoBehaviour
 
         isAttach = true;
         manager.SfxPlay(GameManager.Sfx.Attach);
+
         StartCoroutine(AttachRoutine());
     }
 
