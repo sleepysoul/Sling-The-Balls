@@ -52,12 +52,48 @@ public class GameManager : MonoBehaviour
         for (int index=0; index < poolSize; index++) {
             MakeDongle();
         }
-
     }
 
     void Start()
     {
         NextDongle();
+    }
+
+    // 동글 가져오기
+    void NextDongle()
+    {
+        Dongle newDongle = GetDongle();
+        lastDongle = newDongle;
+        lastDongle.isMerge = true;  // 동글 발사 대기중 머지 잠금
+        lastDongle.level = Random.Range(0, maxLevel);
+        lastDongle.gameObject.SetActive(true);
+
+        SfxPlay(Sfx.Next);
+        StartCoroutine("WaitNext");
+    }
+
+    IEnumerator WaitNext()
+    {
+        while (lastDongle != null) {
+            yield return null;
+        }
+
+        yield return new WaitForSeconds(0.5f);
+
+        NextDongle();
+    }
+
+    // 동글 생성
+    Dongle GetDongle()
+    {
+        for (int index = 0;index < donglePool.Count;index++) {
+            // poolCursor++; => donglePool.count 를 넘어가면 Out of indexing 오류 발생
+            poolCursor = (poolCursor + 1) % donglePool.Count;
+            if (!donglePool[poolCursor].gameObject.activeSelf) {
+                return donglePool[poolCursor];
+            }
+        }
+        return MakeDongle();
     }
 
     public Dongle MakeDongle()
@@ -79,43 +115,6 @@ public class GameManager : MonoBehaviour
         return instantDongle;
     }
 
-    // 동글 생성
-    Dongle GetDongle()
-    {
-        for (int index=0; index < donglePool.Count; index++) {
-            // poolCursor++; => donglePool.count 를 넘어가면 Out of indexing 오류 발생
-            poolCursor = (poolCursor + 1) % donglePool.Count;
-            if (!donglePool[poolCursor].gameObject.activeSelf) {
-                return donglePool[poolCursor];
-            }
-        }
-
-        return MakeDongle();
-    }
-
-    // 동글 가져오기
-    void NextDongle()
-    {
-        Dongle newDongle = GetDongle();
-        lastDongle = newDongle; 
-        lastDongle.level = Random.Range(0, maxLevel);
-        lastDongle.gameObject.SetActive(true);
-
-        SfxPlay(Sfx.Next);
-        StartCoroutine("WaitNext");
-    }
-
-    IEnumerator WaitNext()
-    {
-        while (lastDongle != null) {
-            yield return null;
-        }
-
-        yield return new WaitForSeconds(0.5f);
-
-        NextDongle();
-    }
-
     public void TouchDown()
     {
         if (lastDongle == null) {
@@ -131,7 +130,8 @@ public class GameManager : MonoBehaviour
             return;
         }
 
-        lastDongle.Drop();        
+        lastDongle.Drop();
+        
     }
 
     public void Reset()

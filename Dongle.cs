@@ -197,6 +197,7 @@ public class Dongle : MonoBehaviour
         yield return new WaitForSeconds(releaseTime);
 
         GetComponent<SpringJoint2D>().enabled = false;
+        isMerge = false;  // 동글 발사 후 머지 잠금 해제
         manager.lastDongle = null;        
     }
 
