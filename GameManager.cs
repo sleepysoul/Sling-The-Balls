@@ -172,6 +172,12 @@ public class GameManager : MonoBehaviour
         sfxCursor = (sfxCursor + 1) % sfxPlayer.Length;
     }
 
+    public void StageClear()
+    {
+        // GameOverRoutine 안에서 스테이지 클리어 분기 처리
+        StartCoroutine(GameOverRoutine());
+    }
+
     public void GameOver()
     {
         if (isOver) {
@@ -215,5 +221,8 @@ public class GameManager : MonoBehaviour
     void LateUpdate()
     {
         scoreText.text = score.ToString();
+        if (maxLevel == 6) {
+            StageClear();
+        }
     }
 }
