@@ -116,23 +116,22 @@ public class GameManager : MonoBehaviour
         NextDongle();
     }
 
-    void TouchDown()
+    public void TouchDown()
     {
         if (lastDongle == null) {
             return;
         }
 
-        lastDongle.OnMouseDown();
+        lastDongle.Drag();
     }
 
-    void TouchUp()
+    public void TouchUp()
     {
         if (lastDongle == null) {
             return;
         }
 
-        lastDongle.OnMouseUp();
-        lastDongle = null;
+        lastDongle.Drop();        
     }
 
     public void Reset()

@@ -17,7 +17,7 @@ public class Dongle : MonoBehaviour
     public float releaseTime = .15f;
     public float maxDragDistance = 4f;
 
-    public bool isPressed = false;
+    public bool isDrag;
     public bool isMerge;
     public bool isAttach;
 
@@ -37,7 +37,7 @@ public class Dongle : MonoBehaviour
     {
         // 동글 속성 초기화
         level = 0;
-        isPressed = false;
+        isDrag = false;
         isMerge = false;
         isAttach = false;
         // 동글 트랜스폼 초기화
@@ -156,14 +156,14 @@ public class Dongle : MonoBehaviour
 
     void Update()
     {
-        if (isPressed) 
-        {
+        if (isDrag) 
+        {           
             Vector2 mousePos = Camera.main.ScreenToWorldPoint(Input.mousePosition);
 
             if (Vector3.Distance(mousePos, hook.position) > maxDragDistance) 
                 rb.position = hook.position + (mousePos - hook.position).normalized * maxDragDistance;
             else 
-                rb.position = mousePos;            
+                rb.position = mousePos;
         }
     }
 
@@ -179,15 +179,15 @@ public class Dongle : MonoBehaviour
         }
     }
 
-    public void OnMouseDown()
+    public void Drag()
     {
-        isPressed = true;
+        isDrag = true;
         rb.isKinematic = true;
     }
 
-    public void OnMouseUp()
+    public void Drop()
     {
-        isPressed = false;
+        isDrag = false;
         rb.isKinematic = false;
         StartCoroutine("Release");
     }
