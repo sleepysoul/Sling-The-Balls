@@ -203,9 +203,14 @@ public class GameManager : MonoBehaviour
         yield return new WaitForSeconds(0.5f);
         SfxPlay(Sfx.GameOver);
 
+        // 현재 게임 최종 스코어 출력
         subScoreText.text = "SCORE : " + scoreText.text;
-        PlayerPrefs.SetInt("HighScore", score);
+        // 최종 스코어와 저장된 최고 스코어 비교하여 저장
+        int highScore = Mathf.Max(score, PlayerPrefs.GetInt("HighScore"));
+        PlayerPrefs.SetInt("HighScore", highScore);
+        // 최고 스코어 출력
         highScoreText.text = "HIGHSCORE : " + Mathf.Max(score, PlayerPrefs.GetInt("HighScore")).ToString();
+        // 게임 오버 UI 출력
         endGroup.gameObject.SetActive(true);
     }
 
