@@ -39,10 +39,11 @@ public class GameManager : MonoBehaviour
     public Text lifeText;
     public Text highScoreText;
     public Text subScoreText;
-    public GameObject endGroup;
-    public GameObject stageClearGroup;
     public Text clearHighScoreText;
     public Text clearSubScoreText;
+    public Image caution;
+    public GameObject endGroup;
+    public GameObject stageClearGroup;
 
     [Header("===========[ ETC ]")]
     public GameObject line;
@@ -58,6 +59,23 @@ public class GameManager : MonoBehaviour
         for (int index=0; index < poolSize; index++) {
             MakeDongle();
         }
+
+        StartCoroutine("Caution");
+    }
+
+    IEnumerator Caution()
+    {
+        caution.gameObject.SetActive(true);
+        yield return new WaitForSeconds(0.5f);
+        caution.gameObject.SetActive(false);
+        yield return new WaitForSeconds(0.5f);
+        caution.gameObject.SetActive(true);
+        yield return new WaitForSeconds(0.5f);
+        caution.gameObject.SetActive(false);
+        yield return new WaitForSeconds(0.5f);
+        caution.gameObject.SetActive(true);
+        yield return new WaitForSeconds(1f);
+        caution.gameObject.SetActive(false);
     }
 
     void Start()
