@@ -14,7 +14,7 @@ public class Dongle : MonoBehaviour
     public Animator anim;
 
     public int level;
-    public float releaseTime = .15f;
+    public float releaseTime = .17f;
     public float maxDragDistance = 4f;
 
     public bool isDrag;
@@ -208,5 +208,4 @@ public class Dongle : MonoBehaviour
         effect.transform.localScale = transform.localScale;
         effect.Play();
     }
-
 }

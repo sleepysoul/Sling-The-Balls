@@ -8,6 +8,8 @@ public class GameManager : MonoBehaviour
 {
     [Header("===========[ Core ]")]
     public bool isOver;
+    public bool isClear;
+    public int minLevel;
     public int maxLevel;
     public int score;
     public int health;
@@ -34,9 +36,13 @@ public class GameManager : MonoBehaviour
 
     [Header("===========[ UI ]")]
     public Text scoreText;
+    public Text lifeText;
     public Text highScoreText;
     public Text subScoreText;
     public GameObject endGroup;
+    public GameObject stageClearGroup;
+    public Text clearHighScoreText;
+    public Text clearSubScoreText;
 
     [Header("===========[ ETC ]")]
     public GameObject line;
@@ -62,10 +68,14 @@ public class GameManager : MonoBehaviour
     // 동글 가져오기
     void NextDongle()
     {
+        if (isOver) {
+            return;
+        }
+
         Dongle newDongle = GetDongle();
         lastDongle = newDongle;
         lastDongle.isMerge = true;  // 동글 발사 대기중 머지 잠금
-        lastDongle.level = Random.Range(0, maxLevel);
+        lastDongle.level = Random.Range(minLevel, maxLevel);
         lastDongle.gameObject.SetActive(true);
 
         SfxPlay(Sfx.Next);
@@ -130,8 +140,83 @@ public class GameManager : MonoBehaviour
             return;
         }
 
-        lastDongle.Drop();
-        
+        lastDongle.Drop();        
+    }
+
+    public void StageClear()
+    {
+        StartCoroutine(StageClearRoutine());
+    }
+
+    IEnumerator StageClearRoutine()
+    {
+        yield return new WaitForSeconds(0.5f);
+        SfxPlay(Sfx.GameOver);
+
+        // 현재 게임 최종 스코어 출력
+        clearSubScoreText.text = scoreText.text;
+        // 최종 스코어와 저장된 최고 스코어 비교하여 저장
+        int highScore = Mathf.Max(score, PlayerPrefs.GetInt("HighScore"));
+        PlayerPrefs.SetInt("HighScore", highScore);
+        // 최고 스코어 출력
+        clearHighScoreText.text = "HIGHSCORE : " + Mathf.Max(score, PlayerPrefs.GetInt("HighScore")).ToString();
+        // 게임 오버 UI 출력
+        stageClearGroup.gameObject.SetActive(true);
+    }
+
+    public void Next()
+    {
+        SfxPlay(Sfx.Button);
+
+        StartCoroutine(NextRoutine());
+    }
+
+    IEnumerator NextRoutine()
+    {
+        yield return new WaitForSeconds(0.5f);
+
+        SceneManager.LoadScene((SceneManager.GetActiveScene().buildIndex) + 1);
+    }
+
+    public void GameOver()
+    {
+        if (isOver) {
+            return;
+        }
+
+        isOver = true;
+        StartCoroutine(GameOverRoutine());
+    }
+
+    IEnumerator GameOverRoutine()
+    {
+        // 1. 장면 안에 활성화 되어 있는 모든 동글 가져오기
+        Dongle[] dongles = GameObject.FindObjectsOfType<Dongle>();
+
+        // 2. 지우기 전에 모든 동글의 물리효과 비활성화
+        for (int index=0; index < dongles.Length; index++) {
+            dongles[index].rb.simulated = false;
+        }
+
+        // 3. 1번 목록을 하나씩 접근하여 지우기
+        for (int index=0; index < dongles.Length; index++) {
+            dongles[index].Hide(Vector3.up * 100);
+            yield return new WaitForSeconds(0.1f);
+        }
+
+        yield return new WaitForSeconds(0.5f);
+        SfxPlay(Sfx.GameOver);
+        bgmPlayer.Stop();
+
+        // 현재 게임 최종 스코어 출력
+        subScoreText.text = scoreText.text;
+        // 최종 스코어와 저장된 최고 스코어 비교하여 저장
+        int highScore = Mathf.Max(score, PlayerPrefs.GetInt("HighScore"));
+        PlayerPrefs.SetInt("HighScore", highScore);
+        // 최고 스코어 출력
+        highScoreText.text = "HIGHSCORE : " + Mathf.Max(score, PlayerPrefs.GetInt("HighScore")).ToString();
+        // 게임 오버 UI 출력
+        endGroup.gameObject.SetActive(true);
     }
 
     public void Reset()
@@ -167,61 +252,22 @@ public class GameManager : MonoBehaviour
                 sfxPlayer[sfxCursor].clip = sfxClip[6];
                 break;
         } // end of switch
-        
+
         sfxPlayer[sfxCursor].Play();
         sfxCursor = (sfxCursor + 1) % sfxPlayer.Length;
     }
 
-    public void StageClear()
-    {
-        // GameOverRoutine 안에서 스테이지 클리어 분기 처리
-        StartCoroutine(GameOverRoutine());
-    }
-
-    public void GameOver()
-    {
-        if (isOver) {
-            return;
-        }
-
-        isOver = true;
-        StartCoroutine(GameOverRoutine());
-    }
-
-    IEnumerator GameOverRoutine()
-    {
-        // 1. 장면 안에 활성화 되어 있는 모든 동글 가져오기
-        Dongle[] dongles = GameObject.FindObjectsOfType<Dongle>();
-
-        // 2. 지우기 전에 모든 동글의 물리효과 비활성화
-        for (int index=0; index < dongles.Length; index++) {
-            dongles[index].rb.simulated = false;
-        }
-
-        // 3. 1번 목록을 하나씩 접근하여 지우기
-        for (int index=0; index < dongles.Length; index++) {
-            dongles[index].Hide(Vector3.up * 100);
-            yield return new WaitForSeconds(0.1f);
-        }
-
-        yield return new WaitForSeconds(0.5f);
-        SfxPlay(Sfx.GameOver);
-
-        // 현재 게임 최종 스코어 출력
-        subScoreText.text = "SCORE : " + scoreText.text;
-        // 최종 스코어와 저장된 최고 스코어 비교하여 저장
-        int highScore = Mathf.Max(score, PlayerPrefs.GetInt("HighScore"));
-        PlayerPrefs.SetInt("HighScore", highScore);
-        // 최고 스코어 출력
-        highScoreText.text = "HIGHSCORE : " + Mathf.Max(score, PlayerPrefs.GetInt("HighScore")).ToString();
-        // 게임 오버 UI 출력
-        endGroup.gameObject.SetActive(true);
-    }
-
     void LateUpdate()
     {
-        scoreText.text = score.ToString();
+        scoreText.text = "SCORE : " + score.ToString();
+        lifeText.text = "X " + health.ToString();
+
         if (maxLevel == 6) {
+            if (isClear) {
+                return;
+            }
+
+            isClear = true;
             StageClear();
         }
     }
