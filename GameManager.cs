@@ -106,7 +106,7 @@ public class GameManager : MonoBehaviour
             yield return null;
         }
 
-        yield return new WaitForSeconds(0.5f);
+        yield return new WaitForSeconds(.5f);
 
         NextDongle();
     }
@@ -180,6 +180,9 @@ public class GameManager : MonoBehaviour
         clearHighScoreText.text = "HIGHSCORE : " + Mathf.Max(score, PlayerPrefs.GetInt("HighScore")).ToString();
         // 게임 오버 UI 출력
         stageClearGroup.gameObject.SetActive(true);
+
+        bgmPlayer.Stop();
+
     }
 
     public void Next()
@@ -193,7 +196,13 @@ public class GameManager : MonoBehaviour
     {
         yield return new WaitForSeconds(0.5f);
 
-        SceneManager.LoadScene((SceneManager.GetActiveScene().buildIndex) + 1);
+        int sceneIndex = SceneManager.GetActiveScene().buildIndex;
+
+        if (sceneIndex > SceneManager.sceneCount) {
+            SceneManager.LoadScene(0);
+        }
+
+        SceneManager.LoadScene(sceneIndex + 1);
     }
 
     public void GameOver()

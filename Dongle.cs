@@ -14,8 +14,8 @@ public class Dongle : MonoBehaviour
     public Animator anim;
 
     public int level;
-    public float releaseTime = .17f;
-    public float maxDragDistance = 4f;
+    public float releaseTime = .1f;
+    public float maxDragDistance = 0.01f;
 
     public bool isDrag;
     public bool isMerge;
@@ -88,7 +88,8 @@ public class Dongle : MonoBehaviour
 
     IEnumerator AttachRoutine()
     {
-        yield return new WaitForSeconds(0.2f);
+        yield return new WaitForSeconds(1f);
+        
         isAttach = false;
     }
 
@@ -165,7 +166,15 @@ public class Dongle : MonoBehaviour
                 rb.position = hook.position + (mousePos - hook.position).normalized * maxDragDistance;
             else 
                 rb.position = mousePos;
+            
+            //Debug.Log("mousePos : " + mousePos);
+            Debug.Log("maxDragDistance : " + maxDragDistance);
+            //Debug.Log("Vector3.Distance : "  + Vector3.Distance(mousePos, hook.position));
+            //Debug.Log("rb.position : " + rb.position);
+
         }
+
+        
     }
 
     void OnTriggerExit2D(Collider2D collision)
@@ -182,13 +191,16 @@ public class Dongle : MonoBehaviour
 
     public void Drag()
     {
+        if (isDrag) {
+            return;
+        }
+
         isDrag = true;
         rb.isKinematic = true;
     }
 
     public void Drop()
-    {
-        isDrag = false;
+    {        
         rb.isKinematic = false;
         StartCoroutine("Release");
     }
@@ -197,9 +209,13 @@ public class Dongle : MonoBehaviour
     {
         yield return new WaitForSeconds(releaseTime);
 
+        isDrag = false;
+        rb.bodyType = RigidbodyType2D.Dynamic;
+
         GetComponent<SpringJoint2D>().enabled = false;
-        isMerge = false;  // 동글 발사 후 머지 잠금 해제
-        manager.lastDongle = null;        
+        manager.lastDongle = null;
+
+        isMerge = false;  // 동글 발사 후 머지 잠금 해제        
     }
 
     void EffectPlay()
