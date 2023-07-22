@@ -166,12 +166,6 @@ public class Dongle : MonoBehaviour
                 rb.position = hook.position + (mousePos - hook.position).normalized * maxDragDistance;
             else 
                 rb.position = mousePos;
-            
-            //Debug.Log("mousePos : " + mousePos);
-            Debug.Log("maxDragDistance : " + maxDragDistance);
-            //Debug.Log("Vector3.Distance : "  + Vector3.Distance(mousePos, hook.position));
-            //Debug.Log("rb.position : " + rb.position);
-
         }
 
         

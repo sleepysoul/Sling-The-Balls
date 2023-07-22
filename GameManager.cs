@@ -260,6 +260,26 @@ public class GameManager : MonoBehaviour
         SceneManager.LoadScene(SceneManager.GetActiveScene().buildIndex);
     }
 
+    public void TestNextStage()
+    {
+        SfxPlay(Sfx.Button);
+
+        int sceneIndex = SceneManager.GetActiveScene().buildIndex;
+
+        if (sceneIndex > SceneManager.sceneCount) {
+            SceneManager.LoadScene(0);
+        }
+
+        StartCoroutine(TextNextStageRoutine());
+    }
+
+    IEnumerator TextNextStageRoutine()
+    {
+        yield return new WaitForSeconds(0.5f);
+
+        SceneManager.LoadScene(SceneManager.GetActiveScene().buildIndex + 1);
+    }
+
     public void SfxPlay(Sfx type)
     {
         switch (type) {
