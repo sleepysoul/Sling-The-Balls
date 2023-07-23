@@ -12,7 +12,8 @@ public class GameManager : MonoBehaviour
     public int minLevel;
     public int maxLevel;
     public int score;
-    public int health;
+    public int life;
+    public float playTime;
 
     [Header("===========[ Obejct Pooling ]")]
     public Rigidbody2D hookRb;
@@ -41,9 +42,10 @@ public class GameManager : MonoBehaviour
     public Text subScoreText;
     public Text clearHighScoreText;
     public Text clearSubScoreText;
+    public Text playTimeText;
     public Image caution;
     public GameObject endGroup;
-    public GameObject stageClearGroup;
+    public GameObject stageClearGroup;    
 
     [Header("===========[ ETC ]")]
     public GameObject line;
@@ -172,12 +174,14 @@ public class GameManager : MonoBehaviour
         SfxPlay(Sfx.GameOver);
 
         // 현재 게임 최종 스코어 출력
-        clearSubScoreText.text = scoreText.text;
+        int stageClearScore = score * life * (int)(playTime / 60f);
+        clearSubScoreText.text = "SCORE : " + stageClearScore.ToString();
         // 최종 스코어와 저장된 최고 스코어 비교하여 저장
-        int highScore = Mathf.Max(score, PlayerPrefs.GetInt("HighScore"));
+        int highScore = Mathf.Max(stageClearScore, PlayerPrefs.GetInt("HighScore"));
         PlayerPrefs.SetInt("HighScore", highScore);
-        // 최고 스코어 출력
-        clearHighScoreText.text = "HIGHSCORE : " + Mathf.Max(score, PlayerPrefs.GetInt("HighScore")).ToString();
+        // 최고 스코어 출력 (
+        // clearHighScoreText.text = "HIGHSCORE : " + Mathf.Max(stageClearScore, PlayerPrefs.GetInt("HighScore")).ToString();
+        clearHighScoreText.text = "HIGHSCORE : " + highScore.ToString();
         // 게임 오버 UI 출력
         stageClearGroup.gameObject.SetActive(true);
 
@@ -241,7 +245,8 @@ public class GameManager : MonoBehaviour
         int highScore = Mathf.Max(score, PlayerPrefs.GetInt("HighScore"));
         PlayerPrefs.SetInt("HighScore", highScore);
         // 최고 스코어 출력
-        highScoreText.text = "HIGHSCORE : " + Mathf.Max(score, PlayerPrefs.GetInt("HighScore")).ToString();
+        // highScoreText.text = "HIGHSCORE : " + Mathf.Max(score, PlayerPrefs.GetInt("HighScore")).ToString();
+        highScoreText.text = "HIGHSCORE : " + highScore.ToString();
         // 게임 오버 UI 출력
         endGroup.gameObject.SetActive(true);
     }
@@ -304,10 +309,45 @@ public class GameManager : MonoBehaviour
         sfxCursor = (sfxCursor + 1) % sfxPlayer.Length;
     }
 
+    void Update()
+    {
+        PlayTimeCheck();
+    }
+
+    public void PlayTimeCheck()
+    {
+        if (isOver || isClear) {
+            return;
+        }
+
+        int min = (int)playTime / 60;
+        float sec = playTime % 60;
+        playTime -= Time.deltaTime;
+
+        if (playTime >= 60f) {
+
+            playTimeText.text = "0" + min + " : " + (int)sec;
+            if ((int)sec < 10) {
+                playTimeText.text = "0" + min + " : " + "0" + (int)sec;
+            }
+        }
+
+        if (playTime < 60f) {
+            playTimeText.text = "00 : " + (int)playTime;
+            if ((int)sec < 10) {
+                playTimeText.text = "0" + min + " : " + "0" + (int)sec;
+            }
+        }
+
+        if (playTime <= 0) {
+            playTimeText.text = "00 : 00";
+        }
+    }
+
     void LateUpdate()
     {
         scoreText.text = "SCORE : " + score.ToString();
-        lifeText.text = "X " + health.ToString();
+        lifeText.text = "X " + life.ToString();
 
         if (maxLevel == 6) {
             if (isClear) {

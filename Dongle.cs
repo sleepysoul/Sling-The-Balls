@@ -175,12 +175,14 @@ public class Dongle : MonoBehaviour
     {
         if (collision.tag == "Finish") {
 
-            manager.health -= 1;
+            manager.life -= 1;
 
-            if (manager.health == 0) {
+            if (manager.life == 0) {
                 manager.GameOver();
             }
         }
+
+        this.gameObject.SetActive(false);
     }
 
     public void Drag()
