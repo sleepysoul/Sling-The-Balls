@@ -196,7 +196,8 @@ public class Dongle : MonoBehaviour
     }
 
     public void Drop()
-    {        
+    {
+        isDrag = false;
         rb.isKinematic = false;
         StartCoroutine("Release");
     }
@@ -204,8 +205,7 @@ public class Dongle : MonoBehaviour
     IEnumerator Release()
     {
         yield return new WaitForSeconds(releaseTime);
-
-        isDrag = false;
+        
         rb.bodyType = RigidbodyType2D.Dynamic;
 
         GetComponent<SpringJoint2D>().enabled = false;

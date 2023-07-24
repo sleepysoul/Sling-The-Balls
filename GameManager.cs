@@ -45,14 +45,17 @@ public class GameManager : MonoBehaviour
     public Text playTimeText;
     public Image caution;
     public GameObject endGroup;
-    public GameObject stageClearGroup;    
+    public GameObject stageClearGroup;
+    public GameObject touchPad;
 
     [Header("===========[ ETC ]")]
     public GameObject line;
+    public GameObject point;
+    public GameObject[] points;
 
 
     void Awake()
-    {
+    {      
         Application.targetFrameRate = 60;
         bgmPlayer.Play();
 
@@ -91,15 +94,22 @@ public class GameManager : MonoBehaviour
         if (isOver) {
             return;
         }
-
+        
         Dongle newDongle = GetDongle();
         lastDongle = newDongle;
         lastDongle.isMerge = true;  // 동글 발사 대기중 머지 잠금
         lastDongle.level = Random.Range(minLevel, maxLevel);
         lastDongle.gameObject.SetActive(true);
+        StartCoroutine(TouchPadActive());
 
         SfxPlay(Sfx.Next);
         StartCoroutine("WaitNext");
+    }
+
+    IEnumerator TouchPadActive()
+    {
+        yield return new WaitForSeconds(0.2f);
+        touchPad.gameObject.SetActive(true);
     }
 
     IEnumerator WaitNext()
@@ -160,7 +170,8 @@ public class GameManager : MonoBehaviour
             return;
         }
 
-        lastDongle.Drop();        
+        lastDongle.Drop();
+        touchPad.gameObject.SetActive(false);
     }
 
     public void StageClear()
@@ -189,18 +200,18 @@ public class GameManager : MonoBehaviour
 
     }
 
-    public void Next()
+    public void NextStageButton()
     {
         SfxPlay(Sfx.Button);
 
-        StartCoroutine(NextRoutine());
+        StartCoroutine(NextStageButtonRoutine());
     }
 
-    IEnumerator NextRoutine()
+    IEnumerator NextStageButtonRoutine()
     {
         yield return new WaitForSeconds(0.5f);
 
-        int sceneIndex = SceneManager.GetActiveScene().buildIndex;
+        int sceneIndex = SceneManager.GetActiveScene().buildIndex;        
 
         if (sceneIndex > SceneManager.sceneCount) {
             SceneManager.LoadScene(0);
@@ -215,6 +226,7 @@ public class GameManager : MonoBehaviour
             return;
         }
 
+        life = 0;
         isOver = true;
         StartCoroutine(GameOverRoutine());
     }
@@ -265,9 +277,16 @@ public class GameManager : MonoBehaviour
         SceneManager.LoadScene(SceneManager.GetActiveScene().buildIndex);
     }
 
-    public void TestNextStage()
+    public void TestNextStageButton()
     {
         SfxPlay(Sfx.Button);
+
+        StartCoroutine(TestNextStageButtonRoutine());
+    }
+
+    IEnumerator TestNextStageButtonRoutine()
+    {
+        yield return new WaitForSeconds(0.5f);
 
         int sceneIndex = SceneManager.GetActiveScene().buildIndex;
 
@@ -275,14 +294,7 @@ public class GameManager : MonoBehaviour
             SceneManager.LoadScene(0);
         }
 
-        StartCoroutine(TextNextStageRoutine());
-    }
-
-    IEnumerator TextNextStageRoutine()
-    {
-        yield return new WaitForSeconds(0.5f);
-
-        SceneManager.LoadScene(SceneManager.GetActiveScene().buildIndex + 1);
+        SceneManager.LoadScene(sceneIndex + 1);
     }
 
     public void SfxPlay(Sfx type)
