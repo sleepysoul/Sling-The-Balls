@@ -85,7 +85,7 @@ public class GameManager : MonoBehaviour
         NextDongle();
     }
 
-    // 동글 가져오기
+    // 동글 가져오기 (가져올 때 못 움직이게 할 수 있을까?)
     void NextDongle()
     {
         if (isOver) {
