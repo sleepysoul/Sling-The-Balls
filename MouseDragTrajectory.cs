@@ -3,21 +3,21 @@ using UnityEngine;
 public class MouseDragTrajectory : MonoBehaviour
 {
     public GameObject trajectoryPointPrefab;
-    public Rigidbody projectilePrefab;
+    public Transform launchPoint;
     public int numberOfPoints = 20;
     public float timeInterval = 0.1f;
-    public float initialVelocity = 10f;
 
     private GameObject[] trajectoryPoints;
     private bool isDragging;
-    private Vector3 dragStartPos;
-    private Vector3 dragEndPos;
+    private Vector2 dragStartPos;
+    private Vector2 dragEndPos;
+    private Vector2 launchDirection;
 
     private void Start()
     {
         trajectoryPoints = new GameObject[numberOfPoints];
         for (int i = 0;i < numberOfPoints;i++) {
-            trajectoryPoints[i] = Instantiate(trajectoryPointPrefab, transform.position, Quaternion.identity);
+            trajectoryPoints[i] = Instantiate(trajectoryPointPrefab, launchPoint.position, Quaternion.identity);
             trajectoryPoints[i].SetActive(false);
         }
     }
@@ -29,18 +29,21 @@ public class MouseDragTrajectory : MonoBehaviour
             dragStartPos = GetMouseWorldPosition();
         }
         else if (Input.GetMouseButtonUp(0)) {
-            isDragging = false;
-            dragEndPos = GetMouseWorldPosition();
-            CalculateTrajectory();
+            if (isDragging) {
+                isDragging = false;
+                dragEndPos = GetMouseWorldPosition();
+                CalculateTrajectory();
+                ClearTrajectory();
+            }
         }
 
         if (isDragging) {
-            dragEndPos = GetMouseWorldPosition();
+            dragStartPos = GetMouseWorldPosition();
             CalculateTrajectory();
         }
     }
 
-    private Vector3 GetMouseWorldPosition()
+    private Vector2 GetMouseWorldPosition()
     {
         Vector3 mousePosition = Input.mousePosition;
         mousePosition.z = -Camera.main.transform.position.z;
@@ -49,40 +52,20 @@ public class MouseDragTrajectory : MonoBehaviour
 
     private void CalculateTrajectory()
     {
-        Vector3 direction = (dragEndPos - dragStartPos).normalized;
-        float magnitude = (dragEndPos - dragStartPos).magnitude;
+        Vector2 direction = (dragStartPos - dragEndPos).normalized;
+        float magnitude = (dragStartPos - dragEndPos).magnitude;
+        launchDirection = direction;
 
         float timeStep = timeInterval;
-        float velocityMagnitude = initialVelocity * magnitude;
 
         for (int i = 0;i < numberOfPoints;i++) {
             float time = timeStep * i;
-            float x = direction.x * velocityMagnitude * time;
-            float y = direction.y * velocityMagnitude * time - 0.5f * Physics.gravity.magnitude * time * time;
-            float z = direction.z * velocityMagnitude * time;
+            float x = direction.x * magnitude * time;
+            float y = direction.y * magnitude * time - 0.5f * Physics2D.gravity.magnitude * time * time;
 
-            Vector3 newPos = new Vector3(x, y, z) + transform.position;
+            Vector2 newPos = new Vector2(x, y) + (Vector2)launchPoint.position;
             trajectoryPoints[i].transform.position = newPos;
             trajectoryPoints[i].SetActive(true);
-        }
-    }
-
-    private void ShootProjectile()
-    {
-        Vector3 direction = (dragEndPos - dragStartPos).normalized;
-        float magnitude = (dragEndPos - dragStartPos).magnitude;
-
-        Vector3 initialVelocityVector = direction * initialVelocity * magnitude;
-        Rigidbody projectile = Instantiate(projectilePrefab, transform.position, Quaternion.identity);
-        projectile.velocity = initialVelocityVector;
-    }
-
-    public void OnMouseUp()
-    {
-        if (isDragging) {
-            ShootProjectile();
-            isDragging = false;
-            ClearTrajectory();
         }
     }
 
