@@ -46,7 +46,7 @@ public class MouseDragTrajectory : MonoBehaviour
     private Vector2 GetMouseWorldPosition()
     {
         Vector3 mousePosition = Input.mousePosition;
-        mousePosition.z = -Camera.main.transform.position.z;
+        mousePosition.z = Camera.main.transform.position.z;
         return Camera.main.ScreenToWorldPoint(mousePosition);
     }
 

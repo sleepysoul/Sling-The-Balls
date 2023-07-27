@@ -86,9 +86,34 @@ public class Dongle : MonoBehaviour
         StartCoroutine(AttachRoutine());
     }
 
+    void OnCollisionStay2D(Collision2D collision)
+    {
+        // 충돌 감지하면 상대 동글 클래스 가져오기
+        if (collision.gameObject.tag == "Dongle") {
+            Dongle other = collision.gameObject.GetComponent<Dongle>();
+
+            // 상대 동글 흡수 로직
+            if (level == other.level && !isMerge && !other.isMerge && level < 7) {
+                // 내 동글, 상대 동글 위치 가져오기
+                float meX = transform.position.x;
+                float meY = transform.position.y;
+                float otherX = other.transform.position.x;
+                float otherY = other.transform.position.y;
+
+                // 위치 조건 설정하기
+                if (meY < otherY || (meY == otherY && meX > otherX)) {
+                    // 1. 상대 동글 숨기기
+                    other.Hide(transform.position);
+                    // 2. 내 동글 레벨업
+                    LevelUp();
+                }
+            }
+        }
+    }
+
     IEnumerator AttachRoutine()
     {
-        yield return new WaitForSeconds(1f);
+        yield return new WaitForSeconds(.5f);
         
         isAttach = false;
     }
@@ -216,7 +241,7 @@ public class Dongle : MonoBehaviour
 
     void EffectPlay()
     {
-        effect.transform.position = transform.position;
+        effect.transform.position = transform.position; 
         effect.transform.localScale = transform.localScale;
         effect.Play();
     }

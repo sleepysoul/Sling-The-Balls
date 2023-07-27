@@ -28,6 +28,13 @@ public class GameManager : MonoBehaviour
     public int poolCursor;
     public Dongle lastDongle;
 
+    [Header("===========[ DonglePre ]")]
+    public GameObject donglePrePrefab;
+    public Transform donglePreGroup;
+    public GameObject effectPrePrefab;
+    public Transform effectPreGroup;
+    public int spawnCount;
+
     [Header("===========[ Audio System ]")]
     public AudioSource bgmPlayer;
     public AudioSource[] sfxPlayer;
@@ -52,6 +59,7 @@ public class GameManager : MonoBehaviour
     public GameObject line;
     public GameObject point;
     public GameObject[] points;
+
 
 
     void Awake()
@@ -86,9 +94,10 @@ public class GameManager : MonoBehaviour
     void Start()
     {
         NextDongle();
+        SpawnDonglePre(spawnCount);
     }
 
-    // 동글 가져오기 (가져올 때 못 움직이게 할 수 있을까?)
+    // 동글 가져오기
     void NextDongle()
     {
         if (isOver) {
@@ -155,6 +164,39 @@ public class GameManager : MonoBehaviour
         return instantDongle;
     }
 
+    public DonglePre MakeDonglePre()
+    {
+        GameObject instantEffectPreObj = Instantiate(effectPrePrefab, effectPreGroup);
+        ParticleSystem instantEffectPre = instantEffectPreObj.GetComponent<ParticleSystem>();
+
+        GameObject instantDonglePreObj = Instantiate(donglePrePrefab, donglePreGroup);
+        DonglePre instantDonglePre = instantDonglePreObj.GetComponent<DonglePre>();
+        // instantDonglePre.manager = this;
+        instantDonglePre.effect = instantEffectPre;
+
+        return instantDonglePre;
+    }
+
+    public void SpawnDonglePre(int spwanCount)
+    {        
+        for (int index=0; index < spwanCount; index++) {            
+            StartCoroutine("WaitSpawn");                        
+        }
+    }
+
+    IEnumerator WaitSpawn()
+    {
+        yield return new WaitForSeconds(.5f);
+
+        DonglePre donglePre = MakeDonglePre();
+        donglePre.level = Random.Range(minLevel, maxLevel);
+        donglePre.gameObject.SetActive(true);
+
+        SfxPlay(Sfx.Next);
+    }
+
+
+
     public void TouchDown()
     {
         if (lastDongle == null) {
@@ -185,7 +227,13 @@ public class GameManager : MonoBehaviour
         SfxPlay(Sfx.GameOver);
 
         // 현재 게임 최종 스코어 출력
-        int stageClearScore = score * life * (int)(playTime / 60f);
+        int playTimeToScore;
+        if (playTime < 60f) {
+            playTimeToScore = 1;
+        } else {
+            playTimeToScore = (int)(playTime / 60f);
+        }
+        int stageClearScore = score * life * playTimeToScore;
         clearSubScoreText.text = "SCORE : " + stageClearScore.ToString();
         // 최종 스코어와 저장된 최고 스코어 비교하여 저장
         int highScore = Mathf.Max(stageClearScore, PlayerPrefs.GetInt("HighScore"));
