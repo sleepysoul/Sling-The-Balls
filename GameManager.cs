@@ -1,4 +1,4 @@
-using System.Collections;
+ï»¿using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.SceneManagement;
@@ -28,19 +28,18 @@ public class GameManager : MonoBehaviour
     public int poolCursor;
     public Dongle lastDongle;
 
-    [Header("===========[ DonglePre ]")]
-    public GameObject donglePrePrefab;
-    public Transform donglePreGroup;
-    public GameObject effectPrePrefab;
-    public Transform effectPreGroup;
-    public int spawnCount;
+    [Header("===========[ Spawn ]")]
+    public Transform spawnPoint;
+    [Range(1, 30)]
+    public int spawnNumber;
+    public Dongle spawnDongle;
 
     [Header("===========[ Audio System ]")]
     public AudioSource bgmPlayer;
     public AudioSource[] sfxPlayer;
     public AudioClip[] sfxClip;
     public int sfxCursor;
-    public enum Sfx { LevelUp , Next , GameOver , Attach , Button }
+    public enum Sfx { LevelUp, Next, GameOver, Attach, Button }
 
     [Header("===========[ UI ]")]
     public Text scoreText;
@@ -61,16 +60,18 @@ public class GameManager : MonoBehaviour
     public GameObject[] points;
 
 
-
     void Awake()
-    {      
+    {
         Application.targetFrameRate = 60;
         bgmPlayer.Play();
 
         donglePool = new List<Dongle>();
         effectPool = new List<ParticleSystem>();
-        for (int index=0; index < poolSize; index++) {
+        for (int index = 0;index < poolSize;index++) {
             MakeDongle();
+        }
+        for (int index = 0;index < spawnNumber; index++) {
+            SpawnDongle();
         }
 
         StartCoroutine("Caution");
@@ -93,20 +94,18 @@ public class GameManager : MonoBehaviour
 
     void Start()
     {
-        NextDongle();
-        SpawnDonglePre(spawnCount);
+        NextDongle();        
     }
 
-    // µ¿±Û °¡Á®¿À±â
     void NextDongle()
     {
         if (isOver) {
             return;
         }
-        
+
         Dongle newDongle = GetDongle();
         lastDongle = newDongle;
-        lastDongle.isMerge = true;  // µ¿±Û ¹ß»ç ´ë±âÁß ¸ÓÁö Àá±Ý
+        lastDongle.isMerge = true;  
         lastDongle.level = Random.Range(minLevel, maxLevel);
         lastDongle.gameObject.SetActive(true);
         StartCoroutine(TouchPadActive());
@@ -132,13 +131,13 @@ public class GameManager : MonoBehaviour
         NextDongle();
     }
 
-    // µ¿±Û »ý¼º
     Dongle GetDongle()
     {
         for (int index = 0;index < donglePool.Count;index++) {
-            // poolCursor++; => donglePool.count ¸¦ ³Ñ¾î°¡¸é Out of indexing ¿À·ù ¹ß»ý
             poolCursor = (poolCursor + 1) % donglePool.Count;
             if (!donglePool[poolCursor].gameObject.activeSelf) {
+                donglePool[poolCursor].transform.position = dongleGroup.position;
+                donglePool[poolCursor].GetComponent<SpringJoint2D>().enabled = true;
                 return donglePool[poolCursor];
             }
         }
@@ -164,38 +163,20 @@ public class GameManager : MonoBehaviour
         return instantDongle;
     }
 
-    public DonglePre MakeDonglePre()
+    public void SpawnDongle()
     {
-        GameObject instantEffectPreObj = Instantiate(effectPrePrefab, effectPreGroup);
-        ParticleSystem instantEffectPre = instantEffectPreObj.GetComponent<ParticleSystem>();
-
-        GameObject instantDonglePreObj = Instantiate(donglePrePrefab, donglePreGroup);
-        DonglePre instantDonglePre = instantDonglePreObj.GetComponent<DonglePre>();
-        // instantDonglePre.manager = this;
-        instantDonglePre.effect = instantEffectPre;
-
-        return instantDonglePre;
-    }
-
-    public void SpawnDonglePre(int spwanCount)
-    {        
-        for (int index=0; index < spwanCount; index++) {            
-            StartCoroutine("WaitSpawn");                        
+        for (int index = 0;index < donglePool.Count;index++) {
+            poolCursor = (poolCursor + 1) % donglePool.Count;
+            if (!donglePool[poolCursor].gameObject.activeSelf) {
+                spawnDongle = donglePool[poolCursor];
+            }
         }
+
+        spawnDongle.transform.position = spawnPoint.transform.position;
+        spawnDongle.level = Random.Range(minLevel, maxLevel);
+        spawnDongle.GetComponent<SpringJoint2D>().enabled = false;
+        spawnDongle.gameObject.SetActive(true);
     }
-
-    IEnumerator WaitSpawn()
-    {
-        yield return new WaitForSeconds(.5f);
-
-        DonglePre donglePre = MakeDonglePre();
-        donglePre.level = Random.Range(minLevel, maxLevel);
-        donglePre.gameObject.SetActive(true);
-
-        SfxPlay(Sfx.Next);
-    }
-
-
 
     public void TouchDown()
     {
@@ -226,24 +207,28 @@ public class GameManager : MonoBehaviour
         yield return new WaitForSeconds(0.5f);
         SfxPlay(Sfx.GameOver);
 
-        // ÇöÀç °ÔÀÓ ÃÖÁ¾ ½ºÄÚ¾î Ãâ·Â
+        // í˜„ìž¬ ê²Œìž„ ìµœì¢… ìŠ¤ì½”ì–´ ì¶œë ¥
         int playTimeToScore;
         if (playTime < 60f) {
             playTimeToScore = 1;
-        } else {
+        }
+        else {
             playTimeToScore = (int)(playTime / 60f);
         }
+
+        // ìµœì¢… ìŠ¤ì½”ì–´ì™€ ì €ìž¥ëœ ìµœê³  ìŠ¤ì½”ì–´ ë¹„êµí•˜ì—¬ ì €ìž¥
         int stageClearScore = score * life * playTimeToScore;
         clearSubScoreText.text = "SCORE : " + stageClearScore.ToString();
-        // ÃÖÁ¾ ½ºÄÚ¾î¿Í ÀúÀåµÈ ÃÖ°í ½ºÄÚ¾î ºñ±³ÇÏ¿© ÀúÀå
+
+        // ìµœê³  ìŠ¤ì½”ì–´ ì¶œë ¥
         int highScore = Mathf.Max(stageClearScore, PlayerPrefs.GetInt("HighScore"));
         PlayerPrefs.SetInt("HighScore", highScore);
-        // ÃÖ°í ½ºÄÚ¾î Ãâ·Â (
-        // clearHighScoreText.text = "HIGHSCORE : " + Mathf.Max(stageClearScore, PlayerPrefs.GetInt("HighScore")).ToString();
         clearHighScoreText.text = "HIGHSCORE : " + highScore.ToString();
-        // °ÔÀÓ ¿À¹ö UI Ãâ·Â
+
+        // ê²Œìž„ ì˜¤ë²„ UI ì¶œë ¥
         stageClearGroup.gameObject.SetActive(true);
 
+        // BGM ì¢…ë£Œ
         bgmPlayer.Stop();
 
     }
@@ -259,7 +244,7 @@ public class GameManager : MonoBehaviour
     {
         yield return new WaitForSeconds(0.5f);
 
-        int sceneIndex = SceneManager.GetActiveScene().buildIndex;        
+        int sceneIndex = SceneManager.GetActiveScene().buildIndex;
 
         if (sceneIndex > SceneManager.sceneCount) {
             SceneManager.LoadScene(0);
@@ -281,16 +266,13 @@ public class GameManager : MonoBehaviour
 
     IEnumerator GameOverRoutine()
     {
-        // 1. Àå¸é ¾È¿¡ È°¼ºÈ­ µÇ¾î ÀÖ´Â ¸ðµç µ¿±Û °¡Á®¿À±â
         Dongle[] dongles = GameObject.FindObjectsOfType<Dongle>();
 
-        // 2. Áö¿ì±â Àü¿¡ ¸ðµç µ¿±ÛÀÇ ¹°¸®È¿°ú ºñÈ°¼ºÈ­
-        for (int index=0; index < dongles.Length; index++) {
+        for (int index = 0;index < dongles.Length;index++) {
             dongles[index].rb.simulated = false;
         }
 
-        // 3. 1¹ø ¸ñ·ÏÀ» ÇÏ³ª¾¿ Á¢±ÙÇÏ¿© Áö¿ì±â
-        for (int index=0; index < dongles.Length; index++) {
+        for (int index = 0;index < dongles.Length;index++) {
             dongles[index].Hide(Vector3.up * 100);
             yield return new WaitForSeconds(0.1f);
         }
@@ -299,15 +281,11 @@ public class GameManager : MonoBehaviour
         SfxPlay(Sfx.GameOver);
         bgmPlayer.Stop();
 
-        // ÇöÀç °ÔÀÓ ÃÖÁ¾ ½ºÄÚ¾î Ãâ·Â
         subScoreText.text = scoreText.text;
-        // ÃÖÁ¾ ½ºÄÚ¾î¿Í ÀúÀåµÈ ÃÖ°í ½ºÄÚ¾î ºñ±³ÇÏ¿© ÀúÀå
         int highScore = Mathf.Max(score, PlayerPrefs.GetInt("HighScore"));
         PlayerPrefs.SetInt("HighScore", highScore);
-        // ÃÖ°í ½ºÄÚ¾î Ãâ·Â
-        // highScoreText.text = "HIGHSCORE : " + Mathf.Max(score, PlayerPrefs.GetInt("HighScore")).ToString();
         highScoreText.text = "HIGHSCORE : " + highScore.ToString();
-        // °ÔÀÓ ¿À¹ö UI Ãâ·Â
+
         endGroup.gameObject.SetActive(true);
     }
 
