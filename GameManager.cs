@@ -39,7 +39,7 @@ public class GameManager : MonoBehaviour
     public AudioSource[] sfxPlayer;
     public AudioClip[] sfxClip;
     public int sfxCursor;
-    public enum Sfx { LevelUp, Next, GameOver, Attach, Button }
+    public enum Sfx { LevelUp, Next, GameOver, Attach, DongleAttach, Button }
 
     [Header("===========[ UI ]")]
     public Text scoreText;
@@ -337,9 +337,12 @@ public class GameManager : MonoBehaviour
                 break;
             case Sfx.Attach:
                 sfxPlayer[sfxCursor].clip = sfxClip[5];
+                break;            
+            case Sfx.DongleAttach:
+                sfxPlayer[sfxCursor].clip = sfxClip[6];
                 break;
             case Sfx.Button:
-                sfxPlayer[sfxCursor].clip = sfxClip[6];
+                sfxPlayer[sfxCursor].clip = sfxClip[7];
                 break;
         } // end of switch
 

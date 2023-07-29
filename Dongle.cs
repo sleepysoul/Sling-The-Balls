@@ -55,6 +55,8 @@ public class Dongle : MonoBehaviour
     {
         if (collision.gameObject.tag == "Dongle") {
             Dongle other = collision.gameObject.GetComponent<Dongle>();
+            StartCoroutine("AttachRoutine");
+            
 
             if (level == other.level && !isMerge && !other.isMerge && level < 7) {
                 float meX = transform.position.x;
@@ -69,20 +71,20 @@ public class Dongle : MonoBehaviour
             }
         }
 
-        if (isAttach) {
-            return;
+        if (collision.gameObject.tag == "Play Ground") {
+            manager.SfxPlay(GameManager.Sfx.Attach);
         }
-
-        isAttach = true;
-        manager.SfxPlay(GameManager.Sfx.Attach);
-
-        StartCoroutine(AttachRoutine());
     }
 
     IEnumerator AttachRoutine()
     {
-        yield return new WaitForSeconds(.5f);
+        if (isAttach) {
+            yield break;
+        }
 
+        isAttach = true;
+        manager.SfxPlay(GameManager.Sfx.DongleAttach);
+        yield return new WaitForSeconds(.2f);
         isAttach = false;
     }
 
