@@ -39,7 +39,7 @@ public class GameManager : MonoBehaviour
     public AudioSource[] sfxPlayer;
     public AudioClip[] sfxClip;
     public int sfxCursor;
-    public enum Sfx { LevelUp, Next, GameOver, Attach, DongleAttach, Button }
+    public enum Sfx { LevelUp, Next, GameOver, Attach, DongleAttach, Button, StageClear }
 
     [Header("===========[ UI ]")]
     public Text scoreText;
@@ -205,7 +205,7 @@ public class GameManager : MonoBehaviour
     IEnumerator StageClearRoutine()
     {
         yield return new WaitForSeconds(0.5f);
-        SfxPlay(Sfx.GameOver);
+        SfxPlay(Sfx.StageClear);
 
         // 현재 게임 최종 스코어 출력
         int playTimeToScore;
@@ -343,6 +343,9 @@ public class GameManager : MonoBehaviour
                 break;
             case Sfx.Button:
                 sfxPlayer[sfxCursor].clip = sfxClip[7];
+                break;
+            case Sfx.StageClear:
+                sfxPlayer[sfxCursor].clip = sfxClip[8];
                 break;
         } // end of switch
 

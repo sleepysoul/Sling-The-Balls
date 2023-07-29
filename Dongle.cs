@@ -71,14 +71,14 @@ public class Dongle : MonoBehaviour
             }
         }
 
-        if (collision.gameObject.tag == "Play Ground") {
+        if (collision.gameObject.tag == "Play Ground" && !manager.isClear) {
             manager.SfxPlay(GameManager.Sfx.Attach);
         }
     }
 
     IEnumerator AttachRoutine()
     {
-        if (isAttach) {
+        if (isAttach || manager.isClear) {
             yield break;
         }
 
