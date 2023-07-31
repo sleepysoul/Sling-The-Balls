@@ -71,7 +71,7 @@ public class GameManager : MonoBehaviour
             MakeDongle();
         }
         for (int index = 0;index < spawnNumber; index++) {
-            SpawnDongle();
+            StartCoroutine(SpawnDongle());
         }
 
         StartCoroutine("Caution");
@@ -163,7 +163,7 @@ public class GameManager : MonoBehaviour
         return instantDongle;
     }
 
-    public void SpawnDongle()
+    IEnumerator SpawnDongle()
     {
         for (int index = 0;index < donglePool.Count;index++) {
             poolCursor = (poolCursor + 1) % donglePool.Count;
@@ -176,6 +176,7 @@ public class GameManager : MonoBehaviour
         spawnDongle.level = Random.Range(minLevel, maxLevel);
         spawnDongle.GetComponent<SpringJoint2D>().enabled = false;
         spawnDongle.gameObject.SetActive(true);
+        yield return new WaitForSeconds(1f);
     }
 
     public void TouchDown()

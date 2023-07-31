@@ -177,15 +177,15 @@ public class Dongle : MonoBehaviour
             else
                 rb.position = mousePos;
         }
-
-
     }
 
     void OnTriggerExit2D(Collider2D collision)
     {
         if (collision.tag == "Finish") {
 
-            manager.life -= 1;
+            if (manager.life != 0) {
+                manager.life -= 1;
+            }
 
             if (manager.life == 0) {
                 manager.GameOver();
