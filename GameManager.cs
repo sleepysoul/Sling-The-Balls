@@ -67,9 +67,11 @@ public class GameManager : MonoBehaviour
 
         donglePool = new List<Dongle>();
         effectPool = new List<ParticleSystem>();
+
         for (int index = 0;index < poolSize;index++) {
             MakeDongle();
         }
+        
         for (int index = 0;index < spawnNumber; index++) {
             StartCoroutine(SpawnDongle());
         }

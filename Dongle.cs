@@ -7,6 +7,7 @@ public class Dongle : MonoBehaviour
 {
     public GameManager manager;
     public ParticleSystem effect;
+    public ParticleSystem deadEffect;
 
     public Rigidbody2D rb;
     public Rigidbody2D hook;
@@ -20,6 +21,7 @@ public class Dongle : MonoBehaviour
     public bool isDrag;
     public bool isMerge;
     public bool isAttach;
+    public bool isDead;
 
     void Awake()
     {
@@ -179,6 +181,14 @@ public class Dongle : MonoBehaviour
         }
     }
 
+    private void OnTriggerEnter2D(Collider2D collision)
+    {
+        if (collision.tag == "Finish") {
+            isDead = true;
+            EffectPlay();
+        }
+    }
+
     void OnTriggerExit2D(Collider2D collision)
     {
         if (collision.tag == "Finish") {
@@ -226,6 +236,10 @@ public class Dongle : MonoBehaviour
 
     void EffectPlay()
     {
+        if (isDead) {
+            deadEffect.Play();
+            isDead = false;
+        }
         effect.transform.position = transform.position;
         effect.transform.localScale = transform.localScale;
         effect.Play();
