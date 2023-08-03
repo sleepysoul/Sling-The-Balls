@@ -56,6 +56,8 @@ public class GameManager : MonoBehaviour
 
     [Header("===========[ ETC ]")]
     public GameObject line;
+    public GameObject deadEffectPrefab;
+    public Transform daedEffectGroup;
     public GameObject point;
     public GameObject[] points;
 
