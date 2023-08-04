@@ -33,6 +33,8 @@ public class GameManager : MonoBehaviour
     [Range(1, 30)]
     public int spawnNumber;
     public Dongle spawnDongle;
+    [SerializeField]
+    private float spawnXBoundary = 1.2f;
 
     [Header("===========[ Audio System ]")]
     public AudioSource bgmPlayer;
@@ -74,11 +76,8 @@ public class GameManager : MonoBehaviour
             MakeDongle();
         }
         
-        for (int index = 0;index < spawnNumber; index++) {
-            StartCoroutine(SpawnDongle());
-        }
-
-        StartCoroutine("Caution");
+        StartCoroutine(SpawnDongle());       
+        StartCoroutine(Caution());
     }
 
     IEnumerator Caution()
@@ -168,19 +167,25 @@ public class GameManager : MonoBehaviour
     }
 
     IEnumerator SpawnDongle()
-    {
-        for (int index = 0;index < donglePool.Count;index++) {
-            poolCursor = (poolCursor + 1) % donglePool.Count;
-            if (!donglePool[poolCursor].gameObject.activeSelf) {
-                spawnDongle = donglePool[poolCursor];
-            }
-        }
+    {        
+        for (int index = 0; index < spawnNumber; index++) {
+            for (int j = 0; j < donglePool.Count; j++) {
+                poolCursor = (poolCursor + 1) % donglePool.Count;
+                if (!donglePool[poolCursor].gameObject.activeSelf) {
+                    spawnDongle = donglePool[poolCursor];
 
-        spawnDongle.transform.position = spawnPoint.transform.position;
-        spawnDongle.level = Random.Range(minLevel, maxLevel);
-        spawnDongle.GetComponent<SpringJoint2D>().enabled = false;
-        spawnDongle.gameObject.SetActive(true);
-        yield return new WaitForSeconds(1f);
+                }
+            }
+            spawnDongle.isMerge = true;
+            spawnPoint.transform.position = new Vector3(spawnPoint.position.x + Random.Range(-spawnXBoundary, spawnXBoundary), spawnPoint.position.y);
+            spawnDongle.transform.position = spawnPoint.transform.position;
+            spawnDongle.level = Random.Range(minLevel, maxLevel);            
+            spawnDongle.GetComponent<SpringJoint2D>().enabled = false;
+            spawnDongle.gameObject.SetActive(true);
+
+            yield return new WaitForSeconds(0.3f);
+            spawnDongle.isMerge = false;
+        }      
     }
 
     public void TouchDown()
