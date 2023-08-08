@@ -10,8 +10,8 @@ public class StageManager : MonoBehaviour
 
     public void OnApplicationPause(bool pauseStatus)
     {
-        Debug.Log("OnApplicationPause");
         if (pauseStatus) {
+            Debug.Log("OnApplicationPause");
             SaveGame();
         }
     }

@@ -14,6 +14,10 @@ public class GameManager : MonoBehaviour
     public int score;
     public int life;
     public float playTime;
+    // Stage    
+    private bool isGameStarted = false;
+    private const string gameStartedKey = "GameStarted";
+    private int currentStage = 1; // 현재 진행중인 스테이지 번호
 
     [Header("===========[ Obejct Pooling ]")]
     public Rigidbody2D hookRb;
@@ -52,6 +56,7 @@ public class GameManager : MonoBehaviour
     public Text clearSubScoreText;
     public Text playTimeText;
     public Image caution;
+    public GameObject startGroup;
     public GameObject endGroup;
     public GameObject stageClearGroup;
     public GameObject touchPad;
@@ -66,6 +71,39 @@ public class GameManager : MonoBehaviour
 
     void Awake()
     {
+        // 진행했던 스테이지 호출 (없다면 Stage 1 로드)
+        if (PlayerPrefs.HasKey("CurrentStage")) {
+            LoadGame();
+        }
+        else {
+            Debug.Log("CurrentStage 정보가 없습니다. Stage 1 을 로드합니다.");
+            SceneManager.LoadScene("Stage 1");
+        }
+
+        // 처음 실행 시 Start UI 노출
+        if (!PlayerPrefs.HasKey("GameStarted")) {            
+            ShowStartUI();
+        }
+    }
+
+    private void LoadGame()
+    {
+        Debug.Log("게임을 로드합니다. Stage : " + currentStage);
+    }
+
+    private void ShowStartUI()
+    {
+        startGroup.gameObject.SetActive(true);
+    }
+
+    public void StartGame()
+    {
+        startGroup.gameObject.SetActive(false);
+
+        isGameStarted = true;
+        PlayerPrefs.SetInt("GameStarted", 1);
+        PlayerPrefs.Save();
+
         Application.targetFrameRate = 60;
         bgmPlayer.Play();
 
@@ -75,9 +113,10 @@ public class GameManager : MonoBehaviour
         for (int index = 0;index < poolSize;index++) {
             MakeDongle();
         }
-        
-        StartCoroutine(SpawnDongle());       
+
+        StartCoroutine(SpawnDongle());
         StartCoroutine(Caution());
+        NextDongle();
     }
 
     IEnumerator Caution()
@@ -93,11 +132,6 @@ public class GameManager : MonoBehaviour
         caution.gameObject.SetActive(true);
         yield return new WaitForSeconds(1f);
         caution.gameObject.SetActive(false);
-    }
-
-    void Start()
-    {
-        NextDongle();        
     }
 
     void NextDongle()
@@ -365,7 +399,9 @@ public class GameManager : MonoBehaviour
 
     void Update()
     {
-        PlayTimeCheck();
+        if(isGameStarted) {
+            PlayTimeCheck();
+        }        
     }
 
     public void PlayTimeCheck()
@@ -411,5 +447,11 @@ public class GameManager : MonoBehaviour
             isClear = true;
             StageClear();
         }
+    }
+
+    private void OnApplicationQuit()
+    {
+        // 게임 종료 시 PlayerPrefs 초기화
+        PlayerPrefs.DeleteKey(gameStartedKey);
     }
 }
