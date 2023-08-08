@@ -15,9 +15,8 @@ public class GameManager : MonoBehaviour
     public int life;
     public float playTime;
     // Stage    
-    private bool isGameStarted = false;
+    private bool isGameStarted = true;
     private const string gameStartedKey = "GameStarted";
-    private int currentStage = 1; // 현재 진행중인 스테이지 번호
 
     [Header("===========[ Obejct Pooling ]")]
     public Rigidbody2D hookRb;
@@ -71,38 +70,11 @@ public class GameManager : MonoBehaviour
 
     void Awake()
     {
-        // 진행했던 스테이지 호출 (없다면 Stage 1 로드)
-        if (PlayerPrefs.HasKey("CurrentStage")) {
-            LoadGame();
-        }
-        else {
-            Debug.Log("CurrentStage 정보가 없습니다. Stage 1 을 로드합니다.");
-            SceneManager.LoadScene("Stage 1");
-        }
-
         // 처음 실행 시 Start UI 노출
-        if (!PlayerPrefs.HasKey("GameStarted")) {            
+        if (!PlayerPrefs.HasKey("GameStarted")) {
+            isGameStarted = false;
             ShowStartUI();
         }
-    }
-
-    private void LoadGame()
-    {
-        Debug.Log("게임을 로드합니다. Stage : " + currentStage);
-    }
-
-    private void ShowStartUI()
-    {
-        startGroup.gameObject.SetActive(true);
-    }
-
-    public void StartGame()
-    {
-        startGroup.gameObject.SetActive(false);
-
-        isGameStarted = true;
-        PlayerPrefs.SetInt("GameStarted", 1);
-        PlayerPrefs.Save();
 
         Application.targetFrameRate = 60;
         bgmPlayer.Play();
@@ -116,7 +88,25 @@ public class GameManager : MonoBehaviour
 
         StartCoroutine(SpawnDongle());
         StartCoroutine(Caution());
+    }
+
+    private void Start()
+    {
         NextDongle();
+    }
+
+    private void ShowStartUI()
+    {
+        startGroup.gameObject.SetActive(true);
+    }
+
+    public void StartGame()
+    {
+        startGroup.gameObject.SetActive(false);
+
+        isGameStarted = true;
+        PlayerPrefs.SetInt("GameStarted", 1);
+        PlayerPrefs.Save();     
     }
 
     IEnumerator Caution()

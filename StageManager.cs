@@ -27,8 +27,6 @@ public class StageManager : MonoBehaviour
     {
         if (PlayerPrefs.HasKey("CurrentStage")) {
             currentStage = PlayerPrefs.GetInt("CurrentStage");
-            string thisSceneName = "Stage " + currentStage.ToString();
-            SceneManager.LoadScene(thisSceneName);
             Debug.Log("게임 불러오기 완료 - 현재 스테이지: " + currentStage);
         }
         else {
