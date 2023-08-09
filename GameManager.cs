@@ -14,9 +14,6 @@ public class GameManager : MonoBehaviour
     public int score;
     public int life;
     public float playTime;
-    // Stage    
-    private bool isGameStarted = true;
-    private const string gameStartedKey = "GameStarted";
 
     [Header("===========[ Obejct Pooling ]")]
     public Rigidbody2D hookRb;
@@ -54,8 +51,7 @@ public class GameManager : MonoBehaviour
     public Text clearHighScoreText;
     public Text clearSubScoreText;
     public Text playTimeText;
-    public Image caution;
-    public GameObject startGroup;
+    public Image caution;    
     public GameObject endGroup;
     public GameObject stageClearGroup;
     public GameObject touchPad;
@@ -70,11 +66,9 @@ public class GameManager : MonoBehaviour
 
     void Awake()
     {
-        // 처음 실행 시 Start UI 노출
-        if (!PlayerPrefs.HasKey("GameStarted")) {
-            isGameStarted = false;
-            ShowStartUI();
-        }
+        // Scene 이 처음 호출될 때,  PlayerPrefs.Stage 에 현재 Scene name 저장
+        Debug.Log("새로운 Scene 호출 감지. 호출된 Scene 의 이름은 [ " + SceneManager.GetActiveScene().name + " ] 입니다. 저장 완료.");
+        PlayerPrefs.SetString("Stage", SceneManager.GetActiveScene().name);
 
         Application.targetFrameRate = 60;
         bgmPlayer.Play();
@@ -93,20 +87,6 @@ public class GameManager : MonoBehaviour
     private void Start()
     {
         NextDongle();
-    }
-
-    private void ShowStartUI()
-    {
-        startGroup.gameObject.SetActive(true);
-    }
-
-    public void StartGame()
-    {
-        startGroup.gameObject.SetActive(false);
-
-        isGameStarted = true;
-        PlayerPrefs.SetInt("GameStarted", 1);
-        PlayerPrefs.Save();     
     }
 
     IEnumerator Caution()
@@ -285,6 +265,7 @@ public class GameManager : MonoBehaviour
         }
 
         SceneManager.LoadScene(sceneIndex + 1);
+
     }
 
     public void GameOver()
@@ -389,9 +370,7 @@ public class GameManager : MonoBehaviour
 
     void Update()
     {
-        if(isGameStarted) {
-            PlayTimeCheck();
-        }        
+        PlayTimeCheck();
     }
 
     public void PlayTimeCheck()
@@ -441,7 +420,8 @@ public class GameManager : MonoBehaviour
 
     private void OnApplicationQuit()
     {
-        // 게임 종료 시 PlayerPrefs 초기화
-        PlayerPrefs.DeleteKey(gameStartedKey);
+        // 게임 종료 시, 진행중이던 현재 스테이지 PlayerPrefs 저장
+        Debug.Log("종료 감지. 현재 스테이지 [ " + SceneManager.GetActiveScene().name + " ] 정보를 저장합니다.");
+        PlayerPrefs.SetString("Stage", SceneManager.GetActiveScene().name);
     }
 }
