@@ -44,13 +44,14 @@ public class GameManager : MonoBehaviour
     public enum Sfx { LevelUp, Next, GameOver, Attach, DongleAttach, Button, StageClear }
 
     [Header("===========[ UI ]")]
-    public Text scoreText;
+    public Text stageText;
     public Text lifeText;
+    public Text playTimeText;
+    public Text scoreText;
     public Text highScoreText;
     public Text subScoreText;
     public Text clearHighScoreText;
     public Text clearSubScoreText;
-    public Text playTimeText;
     public Image caution;    
     public GameObject endGroup;
     public GameObject stageClearGroup;
@@ -69,6 +70,7 @@ public class GameManager : MonoBehaviour
         // Scene 이 처음 호출될 때,  PlayerPrefs.Stage 에 현재 Scene name 저장
         Debug.Log("새로운 Scene 호출 감지. 호출된 Scene 의 이름은 [ " + SceneManager.GetActiveScene().name + " ] 입니다. 저장 완료.");
         PlayerPrefs.SetString("Stage", SceneManager.GetActiveScene().name);
+        stageText.text = SceneManager.GetActiveScene().name;
 
         Application.targetFrameRate = 60;
         bgmPlayer.Play();
@@ -261,7 +263,7 @@ public class GameManager : MonoBehaviour
         int sceneIndex = SceneManager.GetActiveScene().buildIndex;
 
         if (sceneIndex > SceneManager.sceneCount) {
-            SceneManager.LoadScene(0);
+            SceneManager.LoadScene(1);
         }
 
         SceneManager.LoadScene(sceneIndex + 1);
@@ -332,7 +334,7 @@ public class GameManager : MonoBehaviour
         int sceneIndex = SceneManager.GetActiveScene().buildIndex;
 
         if (sceneIndex > SceneManager.sceneCount) {
-            SceneManager.LoadScene(0);
+            SceneManager.LoadScene(1);
         }
 
         SceneManager.LoadScene(sceneIndex + 1);
