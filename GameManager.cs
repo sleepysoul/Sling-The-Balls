@@ -9,14 +9,16 @@ public class GameManager : MonoBehaviour
     [Header("===========[ Core ]")]
     public bool isOver;
     public bool isClear;
-    public bool isPause;
+    public bool isPaused;
     public int minLevel;
     public int maxLevel;
     public int score;
     public int life;
     public int dollar;
-    public float playTime;
-    public float totalPlayTime;
+    public int mergeCount;
+    public int gameOverCount;
+    public float playTime; // 스테이지 타임아웃 체크
+    public float totalPlayTime; // 총 플레이 타임
 
     [Header("===========[ Obejct Pooling ]")]
     public Rigidbody2D hookRb;
@@ -293,7 +295,7 @@ public class GameManager : MonoBehaviour
         }
 
         Debug.Log("총 점수 : " + PlayerPrefs.GetInt("TotalScore"));
-        clearTotalScoreText.text = "총 점수 : +" + stageClearScore.ToString() + "(" + PlayerPrefs.GetInt("TotalScore").ToString() + ")";
+        clearTotalScoreText.text = "+" + stageClearScore.ToString() + " (토탈 점수 : " + PlayerPrefs.GetInt("TotalScore").ToString() + ")";
 
         // 스테이지 합산 점수 / 10 = 달러 , 저장 및 출력
         dollar = stageClearScore / 10;
@@ -311,10 +313,16 @@ public class GameManager : MonoBehaviour
             PlayerPrefs.SetInt("Dollar", updateDollar);
         }
         // 스테이지에서 얻은 달러 표기
-        clearDollarText.text = "+$" + dollar.ToString() + "($" + PlayerPrefs.GetInt("Dollar").ToString() + ")";
+        clearDollarText.text = "+$" + dollar.ToString() + " (보유 달러 : $" + PlayerPrefs.GetInt("Dollar").ToString() + ")";
 
         // 플레이 타임 저장
         PlayTimeSave();
+
+        // 머지 카운트 저장
+        MergeCountSave();
+
+        // 게임오버 카운트 저장
+        GameOverCountSave();
 
         // 게임 클리어 UI 출력
         stageClearGroup.gameObject.SetActive(true);
@@ -355,6 +363,7 @@ public class GameManager : MonoBehaviour
 
         life = 0;
         isOver = true;
+        gameOverCount += 1;
         StartCoroutine(GameOverRoutine());
     }
 
@@ -422,13 +431,19 @@ public class GameManager : MonoBehaviour
 
         // 플레이 타임 저장
         PlayTimeSave();
+
+        // 머지 카운트 저장
+        MergeCountSave();
+
+        // 게임오버 카운트 저장
+        GameOverCountSave();
     }
 
     // Option Button Pressed
     public void OptionButtonPressed()
     {
         SfxPlay(Sfx.Attach);
-        isPause = true;
+        isPaused = true;
 
         Invoke("OptionUI", 0.3f);
     }
@@ -440,7 +455,7 @@ public class GameManager : MonoBehaviour
 
         /* Option UI > STATS TEXT 설정 */
         // 스테이지 표기
-        optionStageText.text = stageText.text;
+        optionStageText.text = "최종 스테이지 : " + stageText.text;
 
         // 총 점수 표기
         if (!PlayerPrefs.HasKey("TotalScore"))
@@ -461,7 +476,7 @@ public class GameManager : MonoBehaviour
         }
         else
         {
-            optionDollarText.text = "보유 금액 : $ " + PlayerPrefs.GetInt("Dollar").ToString();
+            optionDollarText.text = "보유 금액 : $" + PlayerPrefs.GetInt("Dollar").ToString();
         }
 
         // 총 플레이타임 표기 => H:MM:SS
@@ -478,13 +493,30 @@ public class GameManager : MonoBehaviour
             int seconds = Mathf.FloorToInt(totalSeconds % 60);
 
             string formattedTime = string.Format("{0:00}:{1:00}:{2:00}", hours, minutes, seconds);
-            optionTotalPlayTimeText.text = formattedTime;
-        }        
+            optionTotalPlayTimeText.text = "총 플레이 타임 : " + formattedTime;
+        }
 
-        // 총 머지 횟수
+        // 총 머지 횟수 표기
+        if (!PlayerPrefs.HasKey("MergeCount"))
+        {
+            PlayerPrefs.SetInt("MergeCount", 0);
+            optionTotalMergeCountText.text = "총 머지 횟수 : 0";
+        }
+        else
+        {
+            optionTotalMergeCountText.text = "총 머지 횟수 : " + PlayerPrefs.GetInt("MergeCount").ToString();
+        }
 
         // 총 게임오버 횟수
-
+        if (!PlayerPrefs.HasKey("GameOverCount"))
+        {
+            PlayerPrefs.SetInt("GameOverCount", 0);
+            optionTotalGameOverCountText.text = "총 게임오버 횟수 : 0";
+        }
+        else
+        {
+            optionTotalGameOverCountText.text = "총 게임오버 횟수 : " + PlayerPrefs.GetInt("GameOverCount").ToString();
+        }
     }
 
 
@@ -492,7 +524,7 @@ public class GameManager : MonoBehaviour
     public void OptionPlayButtonPressed()
     {
         SfxPlay(Sfx.Attach);
-        isPause = false;
+        isPaused = false;
         optionUI.gameObject.SetActive(false);
     }
 
@@ -540,11 +572,19 @@ public class GameManager : MonoBehaviour
     {
         SfxPlay(Sfx.Attach);
 
-        // 모든 정보 초기화
-
-
+        /* 모든 정보 초기화 */
+        // 총 점수 
+        PlayerPrefs.SetInt("TotalScore", 0);
+        // 총 플레이 타임
+        PlayerPrefs.SetFloat("PlayTime", 0f);
+        // 총 머지 횟수
+        PlayerPrefs.SetInt("MergeCount", 0);
+        // 총 게임오버 횟수
+        PlayerPrefs.SetInt("GameOverCount", 0);
         // 초기화 완료 후 선택 UI 비활성화
         statsResetButtonSelectionUI.gameObject.SetActive(false);
+        OptionPlayButtonPressed();
+        OptionButtonPressed();
     }
 
     public void StatsResetButtonSelectionUINoButton()
@@ -663,14 +703,52 @@ public class GameManager : MonoBehaviour
         }
     }
 
+    public void MergeCountSave()
+    {
+        if (!PlayerPrefs.HasKey("MergeCount"))
+        {
+            Debug.Log("저장된 머지 횟수 정보가 없습니다.");
+            PlayerPrefs.SetInt("MergeCount", mergeCount);
+        }
+        else
+        {
+            Debug.Log("저장된 머지 횟수 : " + PlayerPrefs.GetInt("MergeCount"));
+            Debug.Log("현재 스테이지 머지 횟수 : " + mergeCount);
+            int savedMergeCount = PlayerPrefs.GetInt("MergeCount");
+            int updateMergeCount = savedMergeCount + mergeCount;
+            PlayerPrefs.SetInt("MergeCount", updateMergeCount);
+            Debug.Log("머지 횟수 합산 : " + updateMergeCount + " 저장 완료.");
+        }
+    }
+
+    public void GameOverCountSave()
+    {
+        if (!PlayerPrefs.HasKey("GameOverCount"))
+        {
+            Debug.Log("저장된 게임오버 횟수 정보가 없습니다.");
+            PlayerPrefs.SetInt("GameOverCount", gameOverCount);
+        }
+        else
+        {
+            Debug.Log("저장된 게임오버 횟수 : " + PlayerPrefs.GetInt("GameOverCount"));
+            Debug.Log("현재 스테이지 게임오버 횟수 : " + gameOverCount);
+            int savedGameOverCount = PlayerPrefs.GetInt("GameOverCount");
+            int updateGameOverCount = savedGameOverCount + gameOverCount;
+            PlayerPrefs.SetInt("GameOverCount", updateGameOverCount);
+            Debug.Log("게임오버 횟수 합산 : " + updateGameOverCount + " 저장 완료.");
+        }
+    }
+
     void Update()
     {
         PlayTimeCheck();
+
+        // Debug.Log("머지 횟수 : " + mergeCount);        
     }
 
     public void PlayTimeCheck()
     {
-        if (isOver || isClear || isPause)
+        if (isOver || isClear || isPaused)
         {
             return;
         }

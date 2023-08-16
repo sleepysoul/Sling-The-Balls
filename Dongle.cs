@@ -145,6 +145,8 @@ public class Dongle : MonoBehaviour
     {
         isMerge = true;
 
+        manager.mergeCount += 1;
+
         rb.velocity = Vector2.zero;
         rb.angularVelocity = 0;
 
