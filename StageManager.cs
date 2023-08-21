@@ -8,14 +8,6 @@ public class StageManager : MonoBehaviour
 
     private int currentStage = 1; // 현재 진행중인 스테이지 번호
 
-    public void OnApplicationPause(bool pauseStatus)
-    {
-        if (pauseStatus) {
-            Debug.Log("OnApplicationPause");
-            SaveGame();
-        }
-    }
-
     public void SaveGame()
     {
         PlayerPrefs.SetInt("CurrentStage", currentStage);

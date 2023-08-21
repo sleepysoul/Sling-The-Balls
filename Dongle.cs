@@ -141,7 +141,7 @@ public class Dongle : MonoBehaviour
         this.gameObject.SetActive(false);
     }
 
-    void LevelUp()
+    public void LevelUp()
     {
         isMerge = true;
 
