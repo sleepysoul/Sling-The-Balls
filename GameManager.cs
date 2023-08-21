@@ -11,7 +11,10 @@ public class GameManager : MonoBehaviour
     public bool isOver;
     public bool isClear;
     public bool isPaused;
-    public bool isUsed;
+    public bool recoveryLife_ItemisUsed;
+    public bool summonDongles_ItemisUsed;
+    public bool unbreakable_ItemisUsed;
+    public bool levelUpAll_ItemisUsed;
     public int minLevel;
     public int maxLevel;
     public int score;
@@ -1000,7 +1003,7 @@ public class GameManager : MonoBehaviour
     {
         SfxPlay(Sfx.Button);
         
-        if (isUsed)
+        if (recoveryLife_ItemisUsed)
         {
             Debug.Log("리커버리 아이템을 이미 사용했습니다.");
             return;
@@ -1010,7 +1013,7 @@ public class GameManager : MonoBehaviour
             if (lifeRecoveryItemCount > 0)
             {
                 UseItem(Item.LifeRecovery);
-                isUsed = true;
+                recoveryLife_ItemisUsed = true;
                 Debug.Log("리커버리 아이템을 사용했습니다.");
             }
             else
@@ -1025,7 +1028,7 @@ public class GameManager : MonoBehaviour
     {
         SfxPlay(Sfx.Button);
 
-        if (isUsed)
+        if (summonDongles_ItemisUsed)
         {
             Debug.Log("동글 소환 아이템을 이미 사용했습니다.");
             return;
@@ -1035,7 +1038,7 @@ public class GameManager : MonoBehaviour
             if (summonDonglesItemCount > 0)
             {
                 UseItem(Item.SummonDongles);
-                isUsed = true;
+                summonDongles_ItemisUsed = true;
                 Debug.Log("동글 소환 아이템을 사용했습니다.");
             }
             else
@@ -1050,7 +1053,7 @@ public class GameManager : MonoBehaviour
     {
         SfxPlay(Sfx.Button);
 
-        if (isUsed)
+        if (unbreakable_ItemisUsed)
         {
             Debug.Log("언브레이커블 아이템을 이미 사용했습니다.");
             return;
@@ -1060,7 +1063,7 @@ public class GameManager : MonoBehaviour
             if (unbreakableItemCount > 0)
             {
                 UseItem(Item.Unbreakable);
-                isUsed = true;
+                unbreakable_ItemisUsed = true;
                 Debug.Log("언브레이커블 아이템을 사용했습니다.");
             }
             else
@@ -1075,7 +1078,7 @@ public class GameManager : MonoBehaviour
     {
         SfxPlay(Sfx.Button);
 
-        if (isUsed)
+        if (levelUpAll_ItemisUsed)
         {
             Debug.Log("레벨업 아이템을 이미 사용했습니다.");
             return;
@@ -1085,7 +1088,7 @@ public class GameManager : MonoBehaviour
             if (levelUpAllItemCount > 0)
             {
                 UseItem(Item.LevelUpAll);
-                isUsed = true;
+                levelUpAll_ItemisUsed = true;
                 Debug.Log("레벨업 아이템을 사용했습니다.");
             }
             else
@@ -1119,16 +1122,10 @@ public class GameManager : MonoBehaviour
                 break;
             case Item.LevelUpAll:
                 LevelUpAll();
-                unbreakableItemCount--;
-                Debug.Log("Unbreakable 아이템을 사용합니다. 보유 : " + unbreakableItemCount);
+                levelUpAllItemCount--;
+                Debug.Log("Level Up All 아이템을 사용합니다. 보유 : " + levelUpAllItemCount);
                 break;
         }
-    }
-
-    private void CallShop(Item name)
-    {
-        // Shop UI 호출
-        Debug.Log("아이템이 없습니다. 상점 UI 를 호출합니다.");
     }
 
     [System.Obsolete]
@@ -1157,5 +1154,11 @@ public class GameManager : MonoBehaviour
         {
             dongles[index].LevelUp();
         }
+    }
+
+    private void CallShop(Item name)
+    {
+        // Shop UI 호출
+        Debug.Log("아이템이 없습니다. 상점 UI 를 호출합니다.");
     }
 }
