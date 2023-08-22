@@ -11,10 +11,6 @@ public class GameManager : MonoBehaviour
     public bool isOver;
     public bool isClear;
     public bool isPaused;
-    public bool recoveryLife_ItemisUsed;
-    public bool summonDongles_ItemisUsed;
-    public bool unbreakable_ItemisUsed;
-    public bool levelUpAll_ItemisUsed;
     public int minLevel;
     public int maxLevel;
     public int score;
@@ -63,11 +59,39 @@ public class GameManager : MonoBehaviour
     public Text scoreText;
     public Image caution;
 
-    [Header("-----[ Item ]")]
+    [Header("-----[ Item ]")]    
+    // 보유 아이템 카운트
     public int lifeRecoveryItemCount;
     public int summonDonglesItemCount;
     public int unbreakableItemCount;
     public int levelUpAllItemCount;
+    
+    // 아이템 사용 잠금
+    public bool recoveryLife_ItemisUsed;
+    public bool summonDongles_ItemisUsed;
+    public bool unbreakable_ItemisUsed;
+    public bool levelUpAll_ItemisUsed;
+    
+    // 아이템 이미지    
+    public Image lifeRecoveryImage;
+    public Image summonDonglesImage;
+    public Image unbreakableImage;
+    public Image levelUpAllImage;
+
+    // 아이템 가격
+    public int lifeRecoveryItemPrice;
+    public int summonDonglesItemPrice;
+    public int unbreakableItemPrice;
+    public int levelUpAllItemPrice;
+    
+    // 상점 UI 컴포넌트 설정
+    public GameObject shopUI;
+    public Image itemImagePosition;
+    public Text itemInfo;
+    public Button buyButton;
+    public Text buyButtonPriceText;
+
+    // 아이템 기타 설정
     public ParticleSystem lifeRecoveryEffect;
     public enum Item { LifeRecovery , SummonDongles , Unbreakable , LevelUpAll }
         
@@ -519,18 +543,11 @@ public class GameManager : MonoBehaviour
         else
         {
             optionTotalScoreText.text = "총 점수 : " + PlayerPrefs.GetInt("TotalScore").ToString() + "(+" + score.ToString() + ")";
-        }        
+        }
 
         // 달러 표기
-        if (!PlayerPrefs.HasKey("Dollar"))
-        {
-            PlayerPrefs.SetInt("Dollar", 0);
-            optionDollarText.text = "보유 금액 : $ 0";
-        }
-        else
-        {
-            optionDollarText.text = "보유 금액 : $" + PlayerPrefs.GetInt("Dollar").ToString();
-        }
+        // CheckDollar() => 키 없으면 0 , 있으면 보유 달러 리턴(int)
+        optionDollarText.text = "보유 금액 : $" + CheckDollar().ToString();
 
         // 총 플레이타임 표기 => H:MM:SS
         if (!PlayerPrefs.HasKey("PlayTime"))
@@ -746,26 +763,7 @@ public class GameManager : MonoBehaviour
         SceneManager.LoadScene(SceneManager.GetActiveScene().buildIndex);
     }
 
-    public void TestNextStageButton()
-    {
-        SfxPlay(Sfx.Button);
 
-        StartCoroutine(TestNextStageButtonRoutine());
-    }
-    
-    IEnumerator TestNextStageButtonRoutine()
-    {
-        yield return new WaitForSeconds(0.5f);
-
-        int sceneIndex = SceneManager.GetActiveScene().buildIndex;
-
-        if (sceneIndex > SceneManager.sceneCount)
-        {
-            SceneManager.LoadScene(1);
-        }
-
-        SceneManager.LoadScene(sceneIndex + 1);
-    }
 
     private void PlayTimeSave()
     {
@@ -868,7 +866,11 @@ public class GameManager : MonoBehaviour
         lifeText.text = "X " + life.ToString();
         if (life < 3)
         {
-            lifeText.color = Color.red;            
+            lifeText.color = Color.red;
+        } 
+        else
+        {
+            lifeText.color = Color.white;
         }
 
         if (maxLevel == 6)
@@ -1157,8 +1159,110 @@ public class GameManager : MonoBehaviour
     }
 
     private void CallShop(Item name)
-    {
+    {       
+
         // Shop UI 호출
         Debug.Log("아이템이 없습니다. 상점 UI 를 호출합니다.");
+        shopUI.gameObject.SetActive(true);
+        isPaused = true;
+
+        /* 아이템 이름에 따라 Shop UI 에 표기 */
+        // 1. 이미지
+        // 2. 설명
+        // 3. 가격        
+        switch (name)
+        {           
+            case Item.LifeRecovery:
+                itemImagePosition.sprite = lifeRecoveryImage.sprite;
+                itemInfo.text = "던질 수 있는 동글의 라이프를 +5 회복합니다.";
+                buyButtonPriceText.text = "$" + lifeRecoveryItemPrice.ToString();
+                break;
+            case Item.SummonDongles:
+                itemImagePosition = summonDonglesImage;
+                itemInfo.text = "동글 15마리를 즉시 소환합니다.";
+                buyButtonPriceText.text = "$" + summonDonglesItemPrice.ToString();
+                break;
+            case Item.Unbreakable:
+                itemImagePosition = unbreakableImage;
+                itemInfo.text = "30초간 라이프가 99로 변경됩니다!";
+                buyButtonPriceText.text = "$" + unbreakableItemPrice.ToString();
+                break;
+            case Item.LevelUpAll:
+                itemImagePosition = levelUpAllImage;
+                itemInfo.text = "모든 동글 +1 레벨업 !!!";
+                buyButtonPriceText.text = "$" + levelUpAllItemPrice.ToString();
+                break;           
+        }
+
+        itemImagePosition.gameObject.SetActive(true); 
+        
+        // 아이템 가격보다 보유 달러가 부족한 경우
+        if (CheckDollar() < lifeRecoveryItemPrice)
+        {
+            Debug.Log("보유 달러가 부족합니다.");
+            // 구매 버튼 컬러 = 회색
+            buyButton.GetComponent<Image>().color = Color.gray;
+            buyButton.interactable = false;
+            // 버튼 텍스트
+            buyButtonPriceText.color = Color.yellow;
+            buyButtonPriceText.text = "달러 부족";
+        }
+    }
+
+    public void CloseShopUI()
+    {
+        shopUI.gameObject.SetActive(false);
+        isPaused = false;
+    }
+
+    public void BuyButtonPressed()
+    {
+        // 구매 아이템 구분값
+        // 가격만큼 달러 차감
+        // 아이템 카운트 추가
+        // PlayerPrefs 키에 저장
+        // 상점 UI 비활성화
+    }
+
+    // 보유 달러 체크 후 리턴
+    private int CheckDollar()
+    {
+        
+        if (!PlayerPrefs.HasKey("Dollar"))
+        {
+            PlayerPrefs.SetInt("Dollar", 0);
+            return 0;
+        }
+        else
+        {
+            return PlayerPrefs.GetInt("Dollar");
+        }
+    }
+
+    public void TestNextStageButton()
+    {
+        SfxPlay(Sfx.Button);
+
+        StartCoroutine(TestNextStageButtonRoutine());
+    }
+
+    IEnumerator TestNextStageButtonRoutine()
+    {
+        yield return new WaitForSeconds(0.5f);
+
+        int sceneIndex = SceneManager.GetActiveScene().buildIndex;
+
+        if (sceneIndex > SceneManager.sceneCount)
+        {
+            SceneManager.LoadScene(1);
+        }
+
+        SceneManager.LoadScene(sceneIndex + 1);
+    }
+
+    public void TestDollarResetButton()
+    {        
+        PlayerPrefs.SetInt("Dollar", 0);
+        Debug.Log("보유 달러를 리셋했습니다. 보유 달러 : " + CheckDollar());
     }
 }
