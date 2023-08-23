@@ -59,12 +59,19 @@ public class GameManager : MonoBehaviour
     public Text scoreText;
     public Image caution;
 
-    [Header("-----[ Item ]")]    
+    [Header("-----[ Item ]")]
+
+    // 아이템 사용 버튼 텍스트
+    public Text lifeRecoveryButtonText;
+    public Text summonDonglesButtonText;
+    public Text unbreakableButtonText;
+    public Text levelUpAllButtonText;
+
     // 보유 아이템 카운트
     public int lifeRecoveryItemCount;
     public int summonDonglesItemCount;
     public int unbreakableItemCount;
-    public int levelUpAllItemCount;
+    public int levelUpAllItemCount;    
     
     // 아이템 사용 잠금
     public bool recoveryLife_ItemisUsed;
@@ -92,7 +99,12 @@ public class GameManager : MonoBehaviour
     public Text buyButtonPriceText;
 
     // 아이템 기타 설정
+    private int expectedPrice; // 구매 예정 금액
     public ParticleSystem lifeRecoveryEffect;
+    public ParticleSystem lifeRecovery_ItemButtonEffect;
+    public ParticleSystem SummonDongles_ItemButtonEffect;
+    public ParticleSystem Unbreakable_ItemButtonEffect;
+    public ParticleSystem LevelUpAll_ItemButtonEffect;
     public enum Item { LifeRecovery , SummonDongles , Unbreakable , LevelUpAll }
         
     [Header("-----[ GameOption UI ]")]
@@ -153,7 +165,7 @@ public class GameManager : MonoBehaviour
         StartCoroutine(SpawnDongle());
         StartCoroutine(Caution());
 
-        // 라이프 리커버리 아이템 체크
+        // 보유 아이템 체크 (키에도 저장되어 있는지 우선 체크)
         ItemCheck();
 
     }
@@ -819,6 +831,7 @@ public class GameManager : MonoBehaviour
     void Update()
     {
         PlayTimeCheck();
+        HoldingItemCheck();
 
         // Debug.Log("머지 횟수 : " + mergeCount);        
     }
@@ -941,14 +954,14 @@ public class GameManager : MonoBehaviour
     /* ITEM BUTTON UI */
 
     private void ItemCheck()
-    {
+    {       
 
         if (!PlayerPrefs.HasKey("LifeRecovery"))
         {
             Debug.Log("Life Recovery 아이템 정보가 없습니다.");
             Debug.Log("Life Recovery 초기 보너스를 설정합니다. +3");
             PlayerPrefs.SetInt("LifeRecovery", 3);
-            lifeRecoveryItemCount = PlayerPrefs.GetInt("LifeRecovery");
+            lifeRecoveryItemCount = PlayerPrefs.GetInt("LifeRecovery");            
         }
         else
         {
@@ -1000,6 +1013,22 @@ public class GameManager : MonoBehaviour
         }
     }
 
+    private void HoldingItemCheck()
+    {
+        // 아이템 사용 버튼 
+        if (PlayerPrefs.GetInt("LifeRecovery") < 1)
+        {
+            lifeRecovery_ItemButtonEffect.gameObject.SetActive(false);
+            lifeRecoveryButtonText.text = "X0";
+        }
+        else if (PlayerPrefs.GetInt("LifeRecovery") > 0)
+        {
+            lifeRecoveryButtonText.text = "X" + PlayerPrefs.GetInt("LifeRecovery").ToString();
+            lifeRecovery_ItemButtonEffect.gameObject.SetActive(true);
+            lifeRecovery_ItemButtonEffect.Play();
+        }
+    }
+
     // Item1_LifeRecoveryPressed
     public void LifeRecoveryPressed()
     {
@@ -1012,7 +1041,7 @@ public class GameManager : MonoBehaviour
         }
         else
         {
-            if (lifeRecoveryItemCount > 0)
+            if (PlayerPrefs.GetInt("LifeRecovery") > 0)
             {
                 UseItem(Item.LifeRecovery);
                 recoveryLife_ItemisUsed = true;
@@ -1037,7 +1066,7 @@ public class GameManager : MonoBehaviour
         }
         else
         {
-            if (summonDonglesItemCount > 0)
+            if (PlayerPrefs.GetInt("SummonDongles") > 0)
             {
                 UseItem(Item.SummonDongles);
                 summonDongles_ItemisUsed = true;
@@ -1062,7 +1091,7 @@ public class GameManager : MonoBehaviour
         }
         else
         {
-            if (unbreakableItemCount > 0)
+            if (PlayerPrefs.GetInt("Unbreakable") > 0)
             {
                 UseItem(Item.Unbreakable);
                 unbreakable_ItemisUsed = true;
@@ -1087,7 +1116,7 @@ public class GameManager : MonoBehaviour
         }
         else
         {
-            if (levelUpAllItemCount > 0)
+            if (PlayerPrefs.GetInt("LevelUpAll") > 0)
             {
                 UseItem(Item.LevelUpAll);
                 levelUpAll_ItemisUsed = true;
@@ -1110,22 +1139,26 @@ public class GameManager : MonoBehaviour
                 life += 5;
                 lifeRecoveryItemCount--;
                 Debug.Log("LifeRecovery 아이템을 사용합니다. 보유 : " + lifeRecoveryItemCount);
+                PlayerPrefs.SetInt("LifeRecovery", lifeRecoveryItemCount);                
                 break;
             case Item.SummonDongles:
                 StartCoroutine(SpawnDongle());
                 Debug.Log("동글을 소환합니다.");
                 summonDonglesItemCount--;
                 Debug.Log("SummonDongles 아이템을 사용합니다. 보유 : " + summonDonglesItemCount);
+                PlayerPrefs.SetInt("SummonDongles", summonDonglesItemCount);
                 break;
             case Item.Unbreakable:
                 LifeFix();
                 unbreakableItemCount--;
                 Debug.Log("Unbreakable 아이템을 사용합니다. 보유 : " + unbreakableItemCount);
+                PlayerPrefs.SetInt("Unbreakable", unbreakableItemCount);
                 break;
             case Item.LevelUpAll:
                 LevelUpAll();
                 levelUpAllItemCount--;
                 Debug.Log("Level Up All 아이템을 사용합니다. 보유 : " + levelUpAllItemCount);
+                PlayerPrefs.SetInt("LevelUpAll", levelUpAllItemCount);
                 break;
         }
     }
@@ -1164,6 +1197,7 @@ public class GameManager : MonoBehaviour
         // Shop UI 호출
         Debug.Log("아이템이 없습니다. 상점 UI 를 호출합니다.");
         shopUI.gameObject.SetActive(true);
+        touchPad.gameObject.SetActive(false);
         isPaused = true;
 
         /* 아이템 이름에 따라 Shop UI 에 표기 */
@@ -1176,28 +1210,41 @@ public class GameManager : MonoBehaviour
                 itemImagePosition.sprite = lifeRecoveryImage.sprite;
                 itemInfo.text = "던질 수 있는 동글의 라이프를 +5 회복합니다.";
                 buyButtonPriceText.text = "$" + lifeRecoveryItemPrice.ToString();
+                CheckHoldingDollar(lifeRecoveryItemPrice);
+                expectedPrice = lifeRecoveryItemPrice;
                 break;
             case Item.SummonDongles:
                 itemImagePosition = summonDonglesImage;
                 itemInfo.text = "동글 15마리를 즉시 소환합니다.";
                 buyButtonPriceText.text = "$" + summonDonglesItemPrice.ToString();
+                CheckHoldingDollar(summonDonglesItemPrice);
+                expectedPrice = summonDonglesItemPrice;
                 break;
             case Item.Unbreakable:
                 itemImagePosition = unbreakableImage;
                 itemInfo.text = "30초간 라이프가 99로 변경됩니다!";
                 buyButtonPriceText.text = "$" + unbreakableItemPrice.ToString();
+                CheckHoldingDollar(unbreakableItemPrice);
+                expectedPrice = unbreakableItemPrice;
                 break;
             case Item.LevelUpAll:
                 itemImagePosition = levelUpAllImage;
                 itemInfo.text = "모든 동글 +1 레벨업 !!!";
                 buyButtonPriceText.text = "$" + levelUpAllItemPrice.ToString();
+                CheckHoldingDollar(levelUpAllItemPrice);
+                expectedPrice = levelUpAllItemPrice;
                 break;           
         }
 
         itemImagePosition.gameObject.SetActive(true); 
-        
-        // 아이템 가격보다 보유 달러가 부족한 경우
-        if (CheckDollar() < lifeRecoveryItemPrice)
+       
+    }
+
+    private void CheckHoldingDollar(int price)
+    {
+        Debug.Log("넘어온 가격 : $ " + price);
+        // 함수로 요청된 아이템 가격보다 보유 달러가 부족한 경우
+        if (CheckDollar() < price)
         {
             Debug.Log("보유 달러가 부족합니다.");
             // 구매 버튼 컬러 = 회색
@@ -1207,21 +1254,63 @@ public class GameManager : MonoBehaviour
             buyButtonPriceText.color = Color.yellow;
             buyButtonPriceText.text = "달러 부족";
         }
+        else
+        {
+            Debug.Log("보유 달러가 충분합니다.");
+            // 구매 버튼 컬러 = 기본색
+            buyButton.GetComponent<Image>().color = new Color(1f, 0.6914676f, 0f);
+            buyButton.interactable = true;
+            // 버튼 텍스트
+            buyButtonPriceText.color = new Color(0.1960784f, 0.1960784f, 0.1960784f);
+            buyButtonPriceText.text = "$ " + price.ToString();
+        }
+    }
+
+    public void BuyButtonPressed()
+    {
+        // 구매 아이템 구분은 Shop UI 호출 시 switch 구분하여 기대 가격에 설정
+        // 기대 가격 불러와서 보유 달러 차감하고 Dollar 키에 저장
+        Debug.Log("보유 달러 : $ " + CheckDollar());
+        PlayerPrefs.SetInt("Dollar", CheckDollar() - expectedPrice);
+        Debug.Log(expectedPrice + "만큼 차감!");
+        Debug.Log("차감 후 보유 달러 : " + CheckDollar());
+
+        // 아이템 카운트 추가 후 키에 저장
+        switch (expectedPrice)
+        {
+            case 250000:
+                Debug.Log("보유 LifeRecovery 아이템 : " + PlayerPrefs.GetInt("LifeRecovery"));
+                PlayerPrefs.SetInt("LifeRecovery", PlayerPrefs.GetInt("LifeRecovery") + 1);                
+                Debug.Log("증가된 LifeRecovery 아이템 : " + PlayerPrefs.GetInt("LifeRecovery"));
+                break;
+            case 500000:
+                Debug.Log("보유 SummonDongles 아이템 : " + PlayerPrefs.GetInt("SummonDongles"));
+                PlayerPrefs.SetInt("SummonDongles", PlayerPrefs.GetInt("SummonDongles") + 1);
+                Debug.Log("증가된 SummonDongles 아이템 : " + PlayerPrefs.GetInt("SummonDongles"));
+                break;
+            case 1000000:
+                Debug.Log("보유 Unbreakable 아이템 : " + PlayerPrefs.GetInt("Unbreakable"));
+                PlayerPrefs.SetInt("Unbreakable", PlayerPrefs.GetInt("Unbreakable") + 1);
+                Debug.Log("증가된 Unbreakable 아이템 : " + PlayerPrefs.GetInt("Unbreakable"));
+                break;
+            case 5000000:
+                Debug.Log("보유 LevelUpAll 아이템 : " + PlayerPrefs.GetInt("LevelUpAll"));
+                PlayerPrefs.SetInt("LevelUpAll", PlayerPrefs.GetInt("LevelUpAll") + 1);
+                Debug.Log("증가된 LevelUpAll 아이템 : " + PlayerPrefs.GetInt("LevelUpAll"));
+                break;
+        }
+
+        PlayerPrefs.Save();
+
+        // 상점 UI 비활성화
+        CloseShopUI();
     }
 
     public void CloseShopUI()
     {
         shopUI.gameObject.SetActive(false);
+        touchPad.gameObject.SetActive(true);
         isPaused = false;
-    }
-
-    public void BuyButtonPressed()
-    {
-        // 구매 아이템 구분값
-        // 가격만큼 달러 차감
-        // 아이템 카운트 추가
-        // PlayerPrefs 키에 저장
-        // 상점 UI 비활성화
     }
 
     // 보유 달러 체크 후 리턴
@@ -1264,5 +1353,29 @@ public class GameManager : MonoBehaviour
     {        
         PlayerPrefs.SetInt("Dollar", 0);
         Debug.Log("보유 달러를 리셋했습니다. 보유 달러 : " + CheckDollar());
+
+        PlayerPrefs.Save();
+    }
+
+    public void TestDollarChargeButton()
+    {        
+        PlayerPrefs.SetInt("Dollar", CheckDollar() + 250000);
+        Debug.Log("보유 달러를 충전했습니다. 보유 달러 : " + CheckDollar());
+        
+        PlayerPrefs.Save();
+    }
+
+    public void TestItemResetButton()
+    {
+        PlayerPrefs.SetInt("LifeRecovery", 0);
+        Debug.Log("LifeRecovery 를 리셋했습니다. 보유 : " + PlayerPrefs.GetInt("LifeRecovery"));
+        PlayerPrefs.SetInt("SummonDongles", 0);
+        Debug.Log("SummonDongles 를 리셋했습니다. 보유 : " + PlayerPrefs.GetInt("SummonDongles"));
+        PlayerPrefs.SetInt("Unbreakable", 0);
+        Debug.Log("Unbreakable 를 리셋했습니다. 보유 : " + PlayerPrefs.GetInt("Unbreakable"));
+        PlayerPrefs.SetInt("LevelUpAll", 0);
+        Debug.Log("LevelUpAll 를 리셋했습니다. 보유 : " + PlayerPrefs.GetInt("LevelUpAll"));
+
+        PlayerPrefs.Save();
     }
 }
