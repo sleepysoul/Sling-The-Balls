@@ -49,7 +49,17 @@ public class GameManager : MonoBehaviour
     public AudioSource[] sfxPlayer;
     public AudioClip[] sfxClip;
     public int sfxCursor;
-    public enum Sfx { LevelUp, Next, GameOver, Attach, DongleAttach, Button, StageClear }
+    public enum Sfx 
+    { 
+        LevelUp, 
+        Next, 
+        GameOver, 
+        Attach, 
+        DongleAttach, 
+        Button, 
+        StageClear,
+        LifeRecovery
+    }
 
     [Header("===========[ UI ]")]
     [Header("-----[ GamePlay UI ]")]
@@ -60,54 +70,87 @@ public class GameManager : MonoBehaviour
     public Text scoreText;
     public Image caution;
 
-    [Header("-----[ Item ]")]
+    public enum Item 
+    { 
+        LifeRecovery , 
+        SummonDongles , 
+        Unbreakable , 
+        LevelUpAll , 
+        BuyButton , 
+        AdsButton 
+    }
+    
+    [Header("===========[ Item UI ]")]
+
+    // 아이템 사용 버튼 (아이템 사용 후 컬러 변경을 위함)
+    [Header("-----[ Item Button ]")]
+    public GameObject lifeRecoveryButton;
+    public GameObject summonDonglesButton;
+    public GameObject unbreakableButton;
+    public GameObject levelUpAllButton;
+    public Image lifeRecoveryRedDot;
+    public Image summonDonglesRedDot;
+    public Image unbreakableRedDot;
+    public Image levelUpAllRedDot;
 
     // 아이템 사용 버튼 텍스트
+    [Header("-----[ Item Button Text ]")]    
     public Text lifeRecoveryButtonText;
     public Text summonDonglesButtonText;
     public Text unbreakableButtonText;
     public Text levelUpAllButtonText;
 
     // 보유 아이템 카운트
+    [Header("-----[ Item Count ]")]
     public int lifeRecoveryItemCount;
     public int summonDonglesItemCount;
     public int unbreakableItemCount;
-    public int levelUpAllItemCount;    
-    
+    public int levelUpAllItemCount;
+
     // 아이템 사용 잠금
+    [Header("-----[ Used Item Bool ]")]
     public bool recoveryLife_ItemisUsed;
     public bool summonDongles_ItemisUsed;
     public bool unbreakable_ItemisUsed;
     public bool levelUpAll_ItemisUsed;
-    
-    // 아이템 이미지    
+
+    // Shop UI 내부 이미지
+    [Header("-----[ Shop UI _ Item Image ]")]
     public Image lifeRecoveryImage;
     public Image summonDonglesImage;
     public Image unbreakableImage;
     public Image levelUpAllImage;
 
+    // Shop UI 버튼 레드 닷
+    [Header("-----[ Shop UI _ Item Image ]")]
+    public Image buyButtonRedDot;
+    public Image adsButtonRedDot;
+
     // 아이템 가격
+    [Header("-----[ Item Price ]")]
     public int lifeRecoveryItemPrice;
     public int summonDonglesItemPrice;
     public int unbreakableItemPrice;
     public int levelUpAllItemPrice;
-    
+
     // 상점 UI 컴포넌트 설정
+    [Header("-----[ Shop UI _ Core ]")]
+    private int expectedPrice; // 구매 예정 금액
     public GameObject shopUI;
     public Image itemImagePosition;
     public Text itemInfo;
     public Button buyButton;
     public Text buyButtonPriceText;
 
-    // 아이템 기타 설정
-    private int expectedPrice; // 구매 예정 금액
+    // 아이템 이펙트 설정
+    [Header("-----[ Item Effects ]")]
     public ParticleSystem lifeRecoveryEffect;
     public ParticleSystem lifeRecovery_ItemButtonEffect;
     public ParticleSystem summonDongles_ItemButtonEffect;
     public ParticleSystem unbreakable_ItemButtonEffect;
     public ParticleSystem levelUpAll_ItemButtonEffect;
-    public enum Item { LifeRecovery , SummonDongles , Unbreakable , LevelUpAll }
-        
+
+    [Header("===========[ Option UI ]")]
     [Header("-----[ GameOption UI ]")]
     public GameObject optionUI;
     public GameObject resetButtonSelectionUI;
@@ -123,13 +166,13 @@ public class GameManager : MonoBehaviour
     public Text optionTotalMergeCountText;
     public Text optionTotalGameOverCountText;
 
-    [Header("-----[ GameOver UI ]")]
+    [Header("===========[ GameOver UI ]")]
     public GameObject endGroup;
     public Text gameOverSubScoreText; // 현재 스테이지에서 얻은 점수
     public Text overTotalScoreText;
     public Text overDollarText;
 
-    [Header("-----[ GameClear UI ]")]
+    [Header("===========[ GameClear UI ]")]    
     public GameObject stageClearGroup;
     public Text stageClearSubScoreText; // 현재 스테이지에서 얻은 점수
     public Text remainingLifeText;
@@ -558,6 +601,7 @@ public class GameManager : MonoBehaviour
     // Option UI
     private void OptionUI()
     {
+        SfxPlay(Sfx.Button);
         optionUI.gameObject.SetActive(true);
 
         // 게임 플레이 UI 내 Dongle 동작 멈춤
@@ -639,7 +683,7 @@ public class GameManager : MonoBehaviour
     // Option UI > PLAY Button
     public void OptionPlayButtonPressed()
     {
-        SfxPlay(Sfx.Attach);
+        SfxPlay(Sfx.Button);
 
         if (resetButtonSelectionUI.activeSelf || 
                 exitButtonSelectionUI.activeSelf || 
@@ -673,7 +717,7 @@ public class GameManager : MonoBehaviour
     // Option UI > STAGE RESET Button
     public void StageResetButtonPressed()
     {
-        SfxPlay(Sfx.Attach);
+        SfxPlay(Sfx.Button);
 
         Invoke("StageResetButtonSelectionUI", 0.2f);
 
@@ -686,20 +730,20 @@ public class GameManager : MonoBehaviour
 
     public void StageResetButtonSelectionUIYesButton()
     {
-        SfxPlay(Sfx.Attach);
+        SfxPlay(Sfx.Button);
         SceneManager.LoadScene(1);
     }
 
     public void StageResetButtonSelectionUINoButton()
     {
-        SfxPlay(Sfx.Attach);
+        SfxPlay(Sfx.Button);
         stageResetButtonSelectionUI.gameObject.SetActive(false);
     }
 
     // Option UI > STATS RESET Button
     public void StatsResetButtonPressed()
     {
-        SfxPlay(Sfx.Attach);
+        SfxPlay(Sfx.Button);
 
         Invoke("StatsResetButtonSelectionUI", 0.2f);
 
@@ -712,7 +756,7 @@ public class GameManager : MonoBehaviour
     
     public void StatsResetButtonSelectionUIYesButton()
     {
-        SfxPlay(Sfx.Attach);
+        SfxPlay(Sfx.Button);
 
         /* 모든 정보 초기화 */
         // 총 점수 
@@ -731,14 +775,14 @@ public class GameManager : MonoBehaviour
 
     public void StatsResetButtonSelectionUINoButton()
     {
-        SfxPlay(Sfx.Attach);
+        SfxPlay(Sfx.Button);
         statsResetButtonSelectionUI.gameObject.SetActive(false);
     }
 
     // Option UI > RESET Button
     public void OptionResetButtonPressed()
     {
-        SfxPlay(Sfx.Attach);
+        SfxPlay(Sfx.Button);
 
         Invoke("ResetButtonSelectionUI", 0.3f);
         
@@ -751,13 +795,13 @@ public class GameManager : MonoBehaviour
 
     public void ResetButtonSelectionUIYesButton()
     {
-        SfxPlay(Sfx.Attach);
+        SfxPlay(Sfx.Button);
         SceneManager.LoadScene(SceneManager.GetActiveScene().name);
     }
 
     public void ResetButtonSelectionUINoButton()
     {
-        SfxPlay(Sfx.Attach);
+        SfxPlay(Sfx.Button);
         resetButtonSelectionUI.gameObject.SetActive(false);
     }
 
@@ -765,7 +809,7 @@ public class GameManager : MonoBehaviour
     // Option UI > EXIT Button
     public void OptionExitButtonPressed()
     {
-        SfxPlay(Sfx.Attach);
+        SfxPlay(Sfx.Button);
 
         Invoke("ExitButtonSelectionUI", 0.3f);
 
@@ -778,7 +822,7 @@ public class GameManager : MonoBehaviour
 
     public void ExitButtonSelectionUIYesButton()
     {
-        SfxPlay(Sfx.Attach);
+        SfxPlay(Sfx.Button);
 
         // 플레이 정보 저장 함수 호출
 
@@ -788,7 +832,7 @@ public class GameManager : MonoBehaviour
 
     public void ExitButtonSelectionUINoButton()
     {
-        SfxPlay(Sfx.Attach);
+        SfxPlay(Sfx.Button);
         exitButtonSelectionUI.gameObject.SetActive(false);
     }
 
@@ -908,6 +952,9 @@ public class GameManager : MonoBehaviour
 
     void LateUpdate()
     {
+
+        HoldingItemCheck();
+
         scoreText.text = "점수 : " + score.ToString();
         lifeText.text = "X " + life.ToString();
         if (life < 3)
@@ -930,7 +977,6 @@ public class GameManager : MonoBehaviour
             StageClear();
         }
 
-        HoldingItemCheck();
     }
 
 
@@ -961,6 +1007,9 @@ public class GameManager : MonoBehaviour
             case Sfx.StageClear:
                 sfxPlayer[sfxCursor].clip = sfxClip[8];
                 break;
+            case Sfx.LifeRecovery:
+                sfxPlayer[sfxCursor].clip = sfxClip[9];
+                break;
         } // end of switch
 
         sfxPlayer[sfxCursor].Play();
@@ -982,62 +1031,112 @@ public class GameManager : MonoBehaviour
     }
 
     private void HoldingItemCheck()
-    {
-        // 아이템 사용 버튼 
+    {        
         if (GetLifeRecovery() < 1)
         {
             lifeRecovery_ItemButtonEffect.gameObject.SetActive(false);
             lifeRecoveryButtonText.text = "X0";
+            if (recoveryLife_ItemisUsed)
+            {
+                OffRedDot(Item.LifeRecovery);
+            }
+            else
+            {
+                OnRedDot(Item.LifeRecovery);
+            }            
         }
         else if (GetLifeRecovery() > 0)
         {
             lifeRecoveryButtonText.text = "X" + GetLifeRecovery().ToString();
-            lifeRecovery_ItemButtonEffect.gameObject.SetActive(true);
-            lifeRecovery_ItemButtonEffect.Play();
+            if (!recoveryLife_ItemisUsed)
+            {
+                lifeRecovery_ItemButtonEffect.gameObject.SetActive(true);
+                lifeRecovery_ItemButtonEffect.Play();
+            }
+            OffRedDot(Item.LifeRecovery);
         }
 
         if (GetSummonDongles() < 1)
         {
             summonDongles_ItemButtonEffect.gameObject.SetActive(false);
             summonDonglesButtonText.text = "X0";
+            if (summonDongles_ItemisUsed)
+            {
+                OffRedDot(Item.SummonDongles);
+            }
+            else
+            {
+                OnRedDot(Item.SummonDongles);
+            }
         }
         else if (GetSummonDongles() > 0)
         {
             summonDonglesButtonText.text = "X" + GetSummonDongles().ToString();
-            summonDongles_ItemButtonEffect.gameObject.SetActive(true);
-            summonDongles_ItemButtonEffect.Play();
+            if (!summonDongles_ItemisUsed)
+            {
+                summonDongles_ItemButtonEffect.gameObject.SetActive(true);
+                summonDongles_ItemButtonEffect.Play();
+            }
+            OffRedDot(Item.SummonDongles);
         }
         
         if (GetUnbreakable() < 1)
         {
             unbreakable_ItemButtonEffect.gameObject.SetActive(false);
             unbreakableButtonText.text = "X0";
+            if (unbreakable_ItemisUsed)
+            {
+                OffRedDot(Item.Unbreakable);
+            }
+            else
+            {
+                OnRedDot(Item.Unbreakable);
+            }
         }
         else if (GetUnbreakable() > 0)
         {
             unbreakableButtonText.text = "X" + GetUnbreakable().ToString();
-            unbreakable_ItemButtonEffect.gameObject.SetActive(true);
-            unbreakable_ItemButtonEffect.Play();
+            if (!unbreakable_ItemisUsed)
+            {
+                unbreakable_ItemButtonEffect.gameObject.SetActive(true);
+                unbreakable_ItemButtonEffect.Play();
+            }
+            OffRedDot(Item.Unbreakable);
         }
-        
+
         if (GetLevelUpAll() < 1)
         {
             levelUpAll_ItemButtonEffect.gameObject.SetActive(false);
             levelUpAllButtonText.text = "X0";
+            if (levelUpAll_ItemisUsed)
+            {
+                OffRedDot(Item.LevelUpAll);
+            }
+            else
+            {
+                OnRedDot(Item.LevelUpAll);
+            }
         }
         else if (GetLevelUpAll() > 0)
         {
             levelUpAllButtonText.text = "X" + GetLevelUpAll().ToString();
-            levelUpAll_ItemButtonEffect.gameObject.SetActive(true);
-            levelUpAll_ItemButtonEffect.Play();
+            if (!levelUpAll_ItemisUsed)
+            {
+                levelUpAll_ItemButtonEffect.gameObject.SetActive(true);
+                levelUpAll_ItemButtonEffect.Play();
+            }
+            OffRedDot(Item.LevelUpAll);
         }
     }
+
+    /* Item Button Pressed */ 
 
     // Item1_LifeRecoveryPressed
     public void LifeRecoveryPressed()
     {
         SfxPlay(Sfx.Button);
-        
+        lifeRecovery_ItemButtonEffect.gameObject.SetActive(false);
+
         if (recoveryLife_ItemisUsed)
         {
             Debug.Log("리커버리 아이템을 이미 사용했습니다.");
@@ -1047,8 +1146,8 @@ public class GameManager : MonoBehaviour
         {
             if (GetLifeRecovery() > 0)
             {
+                recoveryLife_ItemisUsed = true;                
                 UseItem(Item.LifeRecovery);
-                recoveryLife_ItemisUsed = true;
             }
             else
             {
@@ -1061,6 +1160,7 @@ public class GameManager : MonoBehaviour
     public void SummonDonglesPressed()
     {
         SfxPlay(Sfx.Button);
+        summonDongles_ItemButtonEffect.gameObject.SetActive(false);
 
         if (summonDongles_ItemisUsed)
         {
@@ -1085,6 +1185,7 @@ public class GameManager : MonoBehaviour
     public void UnbreakablePressed()
     {
         SfxPlay(Sfx.Button);
+        unbreakable_ItemButtonEffect.gameObject.SetActive(false);
 
         if (unbreakable_ItemisUsed)
         {
@@ -1095,8 +1196,8 @@ public class GameManager : MonoBehaviour
         {
             if (GetUnbreakable() > 0)
             {
-                UseItem(Item.Unbreakable);
                 unbreakable_ItemisUsed = true;
+                UseItem(Item.Unbreakable);
             }
             else
             {
@@ -1109,6 +1210,7 @@ public class GameManager : MonoBehaviour
     public void LevelUpAllPressed()
     {
         SfxPlay(Sfx.Button);
+        levelUpAll_ItemButtonEffect.gameObject.SetActive(false);
 
         if (levelUpAll_ItemisUsed)
         {
@@ -1119,8 +1221,8 @@ public class GameManager : MonoBehaviour
         {
             if (GetLevelUpAll() > 0)
             {
-                UseItem(Item.LevelUpAll);
                 levelUpAll_ItemisUsed = true;
+                UseItem(Item.LevelUpAll);
             }
             else
             {
@@ -1135,23 +1237,28 @@ public class GameManager : MonoBehaviour
         switch(name)
         {
             case Item.LifeRecovery:
+                SfxPlay(Sfx.LifeRecovery);
+                lifeRecoveryButton.GetComponent<Image>().color = new Color(0.5f, 0.5f, 0.5f);
                 PlayerPrefs.SetInt("LifeRecovery", GetLifeRecovery() - 1);
                 lifeRecoveryEffect.Play();
                 life += 5;                
                 Debug.Log("LifeRecovery 아이템을 사용합니다. 보유 : " + GetLifeRecovery());
                 break;
             case Item.SummonDongles:
+                summonDonglesButton.GetComponent<Image>().color = new Color(0.5f, 0.5f, 0.5f);
                 PlayerPrefs.SetInt("SummonDongles", GetSummonDongles() - 1);
                 Debug.Log("SummonDongles 아이템을 사용합니다. 보유 : " + GetSummonDongles());
                 StartCoroutine(SpawnDongle());
                 Debug.Log("동글을 소환합니다.");
                 break;
             case Item.Unbreakable:
+                unbreakableButton.GetComponent<Image>().color = new Color(0.5f, 0.5f, 0.5f);
                 PlayerPrefs.SetInt("Unbreakable", GetUnbreakable() - 1);
                 Debug.Log("Unbreakable 아이템을 사용합니다. 보유 : " + GetUnbreakable());
                 LifeFix();
                 break;
             case Item.LevelUpAll:
+                levelUpAllButton.GetComponent<Image>().color = new Color(0.5f, 0.5f, 0.5f);
                 PlayerPrefs.SetInt("LevelUpAll", GetLevelUpAll() - 1);
                 Debug.Log("LevelUpAll 아이템을 사용합니다. 보유 : " + GetLevelUpAll());
                 LevelUpAll();
@@ -1188,8 +1295,7 @@ public class GameManager : MonoBehaviour
     }
 
     private void CallShop(Item name)
-    {       
-
+    {      
         // Shop UI 호출
         Debug.Log("아이템이 없습니다. 상점 UI 를 호출합니다.");
         shopUI.gameObject.SetActive(true);
@@ -1246,9 +1352,11 @@ public class GameManager : MonoBehaviour
             // 구매 버튼 컬러 = 회색
             buyButton.GetComponent<Image>().color = Color.gray;
             buyButton.interactable = false;
+            OffRedDot(Item.BuyButton);
             // 버튼 텍스트
             buyButtonPriceText.color = Color.yellow;
-            buyButtonPriceText.text = "달러 부족";
+            buyButtonPriceText.fontSize = 21;
+            buyButtonPriceText.text = "$" + (price - GetDollar()).ToString() + "\n 달러 부족";
         }
         else
         {
@@ -1256,14 +1364,17 @@ public class GameManager : MonoBehaviour
             // 구매 버튼 컬러 = 기본색
             buyButton.GetComponent<Image>().color = new Color(1f, 0.6914676f, 0f);
             buyButton.interactable = true;
+            OnRedDot(Item.BuyButton);
             // 버튼 텍스트
             buyButtonPriceText.color = new Color(0.1960784f, 0.1960784f, 0.1960784f);
+            buyButtonPriceText.fontSize = 30;
             buyButtonPriceText.text = "$ " + price.ToString();
         }
     }
 
     public void BuyButtonPressed()
     {
+        SfxPlay(Sfx.Button);
         // 구매 아이템 구분은 Shop UI 호출 시 switch 구분하여 기대 가격에 설정
         // 기대 가격 불러와서 보유 달러 차감하고 Dollar 키에 저장
         Debug.Log("보유 달러 : $ " + GetDollar());
@@ -1304,6 +1415,7 @@ public class GameManager : MonoBehaviour
 
     public void CloseShopUI()
     {
+        SfxPlay(Sfx.Button);
         shopUI.gameObject.SetActive(false);
         touchPad.gameObject.SetActive(true);
         isPaused = false;
@@ -1381,12 +1493,74 @@ public class GameManager : MonoBehaviour
 
 
 
+    /* 
+     * Red Dot ON/OFF 
+     * 
+     * - Red Dot On -
+     * Holding Item = False
+     * Used Item = False
+     * 
+     */
+    private void OnRedDot(Item type)
+    {
+        switch (type)
+        {
+            case Item.LifeRecovery:
+                lifeRecoveryRedDot.gameObject.SetActive(true);
+                break;
+            case Item.SummonDongles:
+                summonDonglesRedDot.gameObject.SetActive(true);
+                break;
+            case Item.Unbreakable:
+                unbreakableRedDot.gameObject.SetActive(true);
+                break;
+            case Item.LevelUpAll:
+                levelUpAllRedDot.gameObject.SetActive(true);
+                break;
+            case Item.BuyButton:
+                buyButtonRedDot.gameObject.SetActive(true);
+                break;
+            case Item.AdsButton:
+                adsButtonRedDot.gameObject.SetActive(true);
+                break;
+        }
+    }
+
+    private void OffRedDot(Item type)
+    {        
+        switch (type)
+        {
+            case Item.LifeRecovery:
+                lifeRecoveryRedDot.gameObject.SetActive(false);
+                break;
+            case Item.SummonDongles:
+                summonDonglesRedDot.gameObject.SetActive(false);
+                break;
+            case Item.Unbreakable:
+                unbreakableRedDot.gameObject.SetActive(false);
+                break;
+            case Item.LevelUpAll:
+                levelUpAllRedDot.gameObject.SetActive(false);
+                break;
+            case Item.BuyButton:
+                buyButtonRedDot.gameObject.SetActive(false);
+                break;
+            case Item.AdsButton:
+                adsButtonRedDot.gameObject.SetActive(false);
+                break;
+        }
+    }
+
+
+
+
+
     // 갑작스러운 게임 종료 시, 진행 정보 저장
     private void OnApplicationQuit()
     {
         // 옵션 UI 를 활성화 (pause)
         Debug.Log("종료 감지. 옵션 UI 를 활성화합니다.");
-        OptionButtonPressed();
+        optionUI.gameObject.SetActive(true);
         // 진행중이던 현재 스테이지 PlayerPrefs 저장
         Debug.Log("종료 감지. 현재 스테이지 [ " + SceneManager.GetActiveScene().name + " ] 정보를 저장합니다.");
         PlayerPrefs.SetString("Stage", SceneManager.GetActiveScene().name);
