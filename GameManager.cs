@@ -46,6 +46,9 @@ public class GameManager : MonoBehaviour
 
     [Header("===========[ Audio System ]")]
     public AudioSource bgmPlayer;
+    public AudioSource stageClearBGM;
+    public AudioSource gameOverBGM;
+    public AudioSource sfxPlayer_fireworks;
     public AudioSource[] sfxPlayer;
     public AudioClip[] sfxClip;
     public int sfxCursor;
@@ -58,7 +61,7 @@ public class GameManager : MonoBehaviour
         DongleAttach, 
         Button, 
         StageClear,
-        LifeRecovery
+        LifeRecovery        
     }
 
     [Header("===========[ UI ]")]
@@ -142,14 +145,28 @@ public class GameManager : MonoBehaviour
     public Button buyButton;
     public Text buyButtonPriceText;
 
-    // 아이템 이펙트 설정
-    [Header("-----[ Item Effects ]")]
-    public ParticleSystem lifeRecoveryEffect;
+    // 아이템 버튼 이펙트 설정
+    [Header("-----[ Item Button Effects ]")]
     public ParticleSystem lifeRecovery_ItemButtonEffect;
     public ParticleSystem summonDongles_ItemButtonEffect;
     public ParticleSystem unbreakable_ItemButtonEffect;
     public ParticleSystem levelUpAll_ItemButtonEffect;
+    public ParticleSystem lifeRecovery_ItemButtonPressedEffect;
+    public ParticleSystem summonDongles_ItemButtonPressedEffect;
+    public ParticleSystem unbreakable_ItemButtonPressedEffect;
+    public ParticleSystem levelUpAll_ItemButtonPressedEffect;
 
+    // 아이템 사용 이펙트 설정
+    [Header("-----[ Use Item Effects ]")]
+    public ParticleSystem lifeRecovery_Main_Effect;
+    public ParticleSystem lifeRecovery_UI_Effect;
+    public ParticleSystem summonDongles_Main_Effect;
+    public ParticleSystem unbreakable_Main_Effect;
+    public ParticleSystem unbreakable_UI_Effect;
+    public ParticleSystem levelUpAll_Main_Effect;
+    public ParticleSystem levelUpAll_Main_Effect2;
+
+    // 옵션 UI 구간
     [Header("===========[ Option UI ]")]
     [Header("-----[ GameOption UI ]")]
     public GameObject optionUI;
@@ -180,6 +197,9 @@ public class GameManager : MonoBehaviour
     public Text stageClearScoreText;
     public Text clearTotalScoreText;
     public Text clearDollarText;
+
+    [Header("===========[ GameClear Effects ]")]
+    public ParticleSystem[] stageClearEffect;
 
     [Header("===========[ ETC ]")]
     public GameObject line;
@@ -240,8 +260,8 @@ public class GameManager : MonoBehaviour
             return;
         }
 
-        Dongle newDongle = GetDongle();
-        lastDongle = newDongle;
+        lastDongle = GetDongle();
+        lastDongle.GetComponent<SpringJoint2D>().autoConfigureDistance = false;
         lastDongle.isMerge = true;  
         lastDongle.level = Random.Range(minLevel, maxLevel);
         lastDongle.gameObject.SetActive(true);
@@ -301,7 +321,7 @@ public class GameManager : MonoBehaviour
     }
 
     IEnumerator SpawnDongle()
-    {
+    {       
 
         if (summonDongles_ItemisUsed)
         {
@@ -320,13 +340,16 @@ public class GameManager : MonoBehaviour
                 spawnDongle.isMerge = true;
                 spawnPoint.transform.position = new Vector3(spawnPoint_SummonDongles.position.x + Random.Range(-spawnXBoundary, spawnXBoundary), spawnPoint_SummonDongles.position.y);
                 spawnDongle.transform.position = spawnPoint.transform.position;
+                summonDongles_Main_Effect.transform.position = spawnPoint.transform.position;
                 spawnDongle.level = Random.Range(minLevel, maxLevel);
                 spawnDongle.GetComponent<SpringJoint2D>().enabled = false;
+                summonDongles_Main_Effect.gameObject.SetActive(true);
                 spawnDongle.gameObject.SetActive(true);
 
                 yield return new WaitForSeconds(0.3f);
                 spawnDongle.isMerge = false;
             }
+            summonDongles_Main_Effect.gameObject.SetActive(false);
         }
         else
         {
@@ -345,13 +368,16 @@ public class GameManager : MonoBehaviour
                 spawnDongle.isMerge = true;
                 spawnPoint.transform.position = new Vector3(spawnPoint.position.x + Random.Range(-spawnXBoundary, spawnXBoundary), spawnPoint.position.y);
                 spawnDongle.transform.position = spawnPoint.transform.position;
+                summonDongles_Main_Effect.transform.position = spawnPoint.transform.position;
                 spawnDongle.level = Random.Range(minLevel, maxLevel);
                 spawnDongle.GetComponent<SpringJoint2D>().enabled = false;
+                summonDongles_Main_Effect.gameObject.SetActive(true);
                 spawnDongle.gameObject.SetActive(true);
 
                 yield return new WaitForSeconds(0.3f);
                 spawnDongle.isMerge = false;
             }
+            summonDongles_Main_Effect.gameObject.SetActive(false);
         }       
     }
 
@@ -376,15 +402,22 @@ public class GameManager : MonoBehaviour
 
     public void StageClear()
     {
+        bgmPlayer.Stop();
+        stageClearBGM.Play();
+        sfxPlayer_fireworks.Play();
+        for (int index = 0; index < stageClearEffect.Length; index++)
+        {
+            stageClearEffect[index].gameObject.SetActive(true);
+        }
+        
         StartCoroutine(StageClearRoutine());
     }
 
     IEnumerator StageClearRoutine()
     {
-        yield return new WaitForSeconds(0.5f);
-        SfxPlay(Sfx.StageClear);
+        yield return new WaitForSeconds(5f);        
 
-                // 게임 플레이 UI 내 Dongle 동작 멈춤
+        // 게임 플레이 UI 내 Dongle 동작 멈춤
         Dongle[] dongles = GameObject.FindObjectsOfType<Dongle>();
 
         for (int index = 0; index < dongles.Length; index++)
@@ -477,9 +510,6 @@ public class GameManager : MonoBehaviour
         // 터치 패드 비활성화
         touchPad.gameObject.SetActive(false);
 
-        // BGM 종료
-        bgmPlayer.Stop();
-
     }
 
     // 스테이지 클리어 UI → 다음 스테이지 진행 버튼
@@ -526,6 +556,7 @@ public class GameManager : MonoBehaviour
         }
 
         for (int index = 0;index < dongles.Length;index++) {
+            SfxPlay(Sfx.Next);
             dongles[index].Hide(Vector3.up * 100);
             yield return new WaitForSeconds(0.1f);
         }
@@ -533,6 +564,7 @@ public class GameManager : MonoBehaviour
         yield return new WaitForSeconds(0.5f);
         SfxPlay(Sfx.GameOver);
         bgmPlayer.Stop();
+        gameOverBGM.Play();
 
         // 게임오버 시 스테이지 점수 표기
         gameOverSubScoreText.text = "점수 : " + score.ToString();
@@ -1010,7 +1042,7 @@ public class GameManager : MonoBehaviour
             case Sfx.LifeRecovery:
                 sfxPlayer[sfxCursor].clip = sfxClip[9];
                 break;
-        } // end of switch
+        } // end of switch        
 
         sfxPlayer[sfxCursor].Play();
         sfxCursor = (sfxCursor + 1) % sfxPlayer.Length;
@@ -1133,7 +1165,7 @@ public class GameManager : MonoBehaviour
 
     // Item1_LifeRecoveryPressed
     public void LifeRecoveryPressed()
-    {
+    {        
         SfxPlay(Sfx.Button);
         lifeRecovery_ItemButtonEffect.gameObject.SetActive(false);
 
@@ -1237,14 +1269,17 @@ public class GameManager : MonoBehaviour
         switch(name)
         {
             case Item.LifeRecovery:
+                lifeRecovery_ItemButtonPressedEffect.Play();
+                lifeRecovery_Main_Effect.Play();
                 SfxPlay(Sfx.LifeRecovery);
                 lifeRecoveryButton.GetComponent<Image>().color = new Color(0.5f, 0.5f, 0.5f);
                 PlayerPrefs.SetInt("LifeRecovery", GetLifeRecovery() - 1);
-                lifeRecoveryEffect.Play();
-                life += 5;                
+                StartCoroutine("LifeRecovery");
                 Debug.Log("LifeRecovery 아이템을 사용합니다. 보유 : " + GetLifeRecovery());
                 break;
             case Item.SummonDongles:
+                SfxPlay(Sfx.LifeRecovery);
+                summonDongles_ItemButtonPressedEffect.Play();
                 summonDonglesButton.GetComponent<Image>().color = new Color(0.5f, 0.5f, 0.5f);
                 PlayerPrefs.SetInt("SummonDongles", GetSummonDongles() - 1);
                 Debug.Log("SummonDongles 아이템을 사용합니다. 보유 : " + GetSummonDongles());
@@ -1252,39 +1287,62 @@ public class GameManager : MonoBehaviour
                 Debug.Log("동글을 소환합니다.");
                 break;
             case Item.Unbreakable:
+                SfxPlay(Sfx.LifeRecovery);
+                unbreakable_ItemButtonPressedEffect.Play();
+                unbreakable_Main_Effect.gameObject.SetActive(true);
                 unbreakableButton.GetComponent<Image>().color = new Color(0.5f, 0.5f, 0.5f);
                 PlayerPrefs.SetInt("Unbreakable", GetUnbreakable() - 1);
                 Debug.Log("Unbreakable 아이템을 사용합니다. 보유 : " + GetUnbreakable());
                 LifeFix();
                 break;
             case Item.LevelUpAll:
+                SfxPlay(Sfx.LifeRecovery);
+                levelUpAll_ItemButtonPressedEffect.Play();
                 levelUpAllButton.GetComponent<Image>().color = new Color(0.5f, 0.5f, 0.5f);
                 PlayerPrefs.SetInt("LevelUpAll", GetLevelUpAll() - 1);
                 Debug.Log("LevelUpAll 아이템을 사용합니다. 보유 : " + GetLevelUpAll());
-                LevelUpAll();
+                StartCoroutine("LevelUpAll");
                 break;
         }
+    }
+
+    IEnumerator LifeRecovery()
+    {
+        yield return new WaitForSeconds(1.5f);
+        lifeRecovery_UI_Effect.Play();
+        life += 5;
     }
 
     [System.Obsolete]
     private void LifeFix()
     {
+        unbreakable_UI_Effect.gameObject.SetActive(true);
         tempLife = life;
         life = 99;
-        lifeRecoveryEffect.loop = true;
-        lifeRecoveryEffect.Play();
         Invoke("LifeRestore", 30f);
     }
 
     [System.Obsolete]
     private void LifeRestore()
     {
-        lifeRecoveryEffect.loop = false;
+        lifeRecovery_UI_Effect.loop = false;
         life = tempLife;
     }
 
-    private void LevelUpAll()
+    IEnumerator LevelUpAll()
     {
+        levelUpAll_Main_Effect.gameObject.SetActive(true);
+
+        yield return new WaitForSeconds(1f);
+
+        levelUpAll_Main_Effect.gameObject.SetActive(false);
+
+        yield return new WaitForSeconds(.2f);
+
+        levelUpAll_Main_Effect2.gameObject.SetActive(true);
+
+        yield return new WaitForSeconds(.7f);
+
         // 게임 플레이 UI 내 Dongle 레벨업
         Dongle[] dongles = GameObject.FindObjectsOfType<Dongle>();
 
