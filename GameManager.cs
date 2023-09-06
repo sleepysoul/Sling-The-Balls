@@ -203,6 +203,10 @@ public class GameManager : MonoBehaviour
 
     [Header("===========[ ETC ]")]
     public GameObject line;
+    public GameObject bombCube;
+    public SpriteRenderer bombColor;
+    public int bombCubeCount;
+    public ParticleSystem bombEffect;
     public GameObject deadEffectPrefab;
     public Transform daedEffectGroup;
     public GameObject point;
@@ -415,7 +419,6 @@ public class GameManager : MonoBehaviour
 
     IEnumerator StageClearRoutine()
     {
-        yield return new WaitForSeconds(5f);        
 
         // 게임 플레이 UI 내 Dongle 동작 멈춤
         Dongle[] dongles = GameObject.FindObjectsOfType<Dongle>();
@@ -432,6 +435,8 @@ public class GameManager : MonoBehaviour
         {
             cubee[j].GetComponent<Rigidbody2D>().simulated = false;
         }
+
+        yield return new WaitForSeconds(5f);        
 
         /* 현재 게임 최종 스코어 출력 */
         // 남은 시간대 점수 환산
@@ -940,7 +945,7 @@ public class GameManager : MonoBehaviour
 
     void Update()
     {
-        PlayTimeCheck();
+        PlayTimeCheck();        
                 
         // Debug.Log("머지 횟수 : " + mergeCount);        
     }
