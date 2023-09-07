@@ -20,7 +20,7 @@ public class CubeeBombCube : MonoBehaviour
             Vector2 collisionVelocity = collision.relativeVelocity;
 
             Debug.Log("collisionVelocity : " + collisionVelocity);
-            if (collisionVelocity.x > 10f)
+            if (Mathf.Abs(collisionVelocity.x) > 10f)
             {
                 bombCubeCount--;
             }

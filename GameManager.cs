@@ -198,15 +198,16 @@ public class GameManager : MonoBehaviour
     public Text clearTotalScoreText;
     public Text clearDollarText;
 
+    [Header("===========[ Final Clear UI ]")]
+    public GameObject finalStageClearGroup;
+    public Text finalStageClearText;
+    public Text finalStageClearBonus;
+
     [Header("===========[ GameClear Effects ]")]
     public ParticleSystem[] stageClearEffect;
 
     [Header("===========[ ETC ]")]
     public GameObject line;
-    public GameObject bombCube;
-    public SpriteRenderer bombColor;
-    public int bombCubeCount;
-    public ParticleSystem bombEffect;
     public GameObject deadEffectPrefab;
     public Transform daedEffectGroup;
     public GameObject point;
@@ -531,12 +532,39 @@ public class GameManager : MonoBehaviour
 
         int sceneIndex = SceneManager.GetActiveScene().buildIndex;
 
+        // 최종 스테이지 완료 시
         if (sceneIndex > SceneManager.sceneCount) {
-            SceneManager.LoadScene(1);
+            finalStageClearGroup.gameObject.SetActive(true);
+            finalStageClearBonus.text = "<color=cyan>현재 보너스 포인트 : " + CheckFinalStageClear().ToString() + "</color>";            
         }
 
         SceneManager.LoadScene(sceneIndex + 1);
 
+    }
+
+    private int CheckFinalStageClear()
+    {
+        if (!PlayerPrefs.HasKey("StageClearBonus"))
+        {
+            PlayerPrefs.SetInt("StageClearBonus", 1);
+        }
+        else if (PlayerPrefs.HasKey("StageClearBonus"))
+        {            
+            PlayerPrefs.SetInt("StageClearBonus", PlayerPrefs.GetInt("StageClearBonus") + 1);
+        }
+        return PlayerPrefs.GetInt("StageClearBonus");
+    }
+
+    public void FinalStageClearButtonPressed()
+    {
+        finalStageClearGroup.gameObject.SetActive(false);
+
+        PlayerPrefs.SetInt("LifeRecovery", 5);
+        PlayerPrefs.SetInt("SummonDongles", 5);
+        PlayerPrefs.SetInt("Unbreakable", 5);
+        PlayerPrefs.SetInt("LevelUpAll", 5);
+
+        SceneManager.LoadScene(1);
     }
 
 
@@ -1313,9 +1341,9 @@ public class GameManager : MonoBehaviour
 
     IEnumerator LifeRecovery()
     {
-        yield return new WaitForSeconds(1.5f);
         lifeRecovery_UI_Effect.Play();
         life += 5;
+        yield return new WaitForSeconds(1.5f);
     }
 
     [System.Obsolete]
