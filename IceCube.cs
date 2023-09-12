@@ -9,6 +9,9 @@ public class IceCube : MonoBehaviour
     public GameObject iceCube;
     public SpriteRenderer iceColor;
     public ParticleSystem iceEffect;
+    public AudioSource iceCubeSfxPlayer;
+    
+
     public int iceCubeCount;
 
     private void Awake()
@@ -26,11 +29,12 @@ public class IceCube : MonoBehaviour
     {
         if (velocity == 0)
         {
-            rigid.AddForce(Vector2.right * 16000 * Time.deltaTime, ForceMode2D.Impulse);
+            rigid.AddForce(Vector2.right * 32000 * Time.deltaTime, ForceMode2D.Impulse);
+            Debug.Log("velocity 0 ! Let's Move. Speed : " + Vector2.right * 16000 * Time.deltaTime);
         }
         else
         {
-            rigid.AddForce(rigid.velocity * 16000 * Time.deltaTime, ForceMode2D.Impulse);
+            rigid.AddForce(rigid.velocity * 32000 * Time.deltaTime, ForceMode2D.Impulse);
         }
     }
 
@@ -46,22 +50,25 @@ public class IceCube : MonoBehaviour
 
     private void OnCollisionEnter2D(Collision2D collision)
     {
-        // 부딪힌 오브젝트의 정보를 얻음
-        Rigidbody2D otherRigidbody = collision.gameObject.GetComponent<Rigidbody2D>();
-
-        if (otherRigidbody != null)
+        if (collision.gameObject.tag == "Dongle")
         {
-            // 부딪힌 오브젝트의 속도를 얻음
-            Vector2 collisionVelocity = collision.relativeVelocity;
+            // 부딪힌 오브젝트의 정보를 얻음
+            Rigidbody2D otherRigidbody = collision.gameObject.GetComponent<Rigidbody2D>();
 
-            Debug.Log("collisionVelocity : " + collisionVelocity);
-            if (Mathf.Abs(collisionVelocity.x) > 12f)
+            if (otherRigidbody != null)
             {
-                iceCubeCount--;
-            }
+                // 부딪힌 오브젝트의 속도를 얻음
+                Vector2 collisionVelocity = collision.relativeVelocity;
 
-            // 부딪힌 오브젝트에 힘을 가할 수도 있음
-            // otherRigidbody.AddForce(new Vector2(10f, 0f), ForceMode2D.Impulse);
+                Debug.Log("collisionVelocity : " + collisionVelocity);
+                if (Mathf.Abs(collisionVelocity.x) > 20f)
+                {
+                    iceCubeCount--;
+                }
+
+                // 부딪힌 오브젝트에 힘을 가할 수도 있음
+                // otherRigidbody.AddForce(new Vector2(10f, 0f), ForceMode2D.Impulse);
+            }
         }
     }
 
@@ -81,6 +88,10 @@ public class IceCube : MonoBehaviour
         }
         else if (iceCubeCount == 0)
         {
+            if (iceCubeSfxPlayer.isPlaying == false)
+            {
+                iceCubeSfxPlayer.Play();
+            }
             iceEffect.gameObject.SetActive(true);
             StartCoroutine("Bomb");
         }

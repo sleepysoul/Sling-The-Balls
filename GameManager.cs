@@ -61,7 +61,8 @@ public class GameManager : MonoBehaviour
         DongleAttach, 
         Button, 
         StageClear,
-        LifeRecovery        
+        LifeRecovery,
+        Explosion
     }
 
     [Header("===========[ UI ]")]
@@ -241,6 +242,7 @@ public class GameManager : MonoBehaviour
 
     private void Start()
     {
+        SetResolution();
         NextDongle();
     }
 
@@ -410,6 +412,7 @@ public class GameManager : MonoBehaviour
         bgmPlayer.Stop();
         stageClearBGM.Play();
         sfxPlayer_fireworks.Play();
+        touchPad.gameObject.SetActive(false);
         for (int index = 0; index < stageClearEffect.Length; index++)
         {
             stageClearEffect[index].gameObject.SetActive(true);
@@ -531,14 +534,19 @@ public class GameManager : MonoBehaviour
         yield return new WaitForSeconds(0.5f);
 
         int sceneIndex = SceneManager.GetActiveScene().buildIndex;
+        Debug.Log("sceneIndex : " + sceneIndex);
+        Debug.Log("sceneCountInBuildSettings : " + SceneManager.sceneCountInBuildSettings);
 
         // 최종 스테이지 완료 시
-        if (sceneIndex > SceneManager.sceneCount) {
+        if (sceneIndex == SceneManager.sceneCountInBuildSettings - 1) {
+            Debug.Log("Final Stage Cleared! ");
             finalStageClearGroup.gameObject.SetActive(true);
             finalStageClearBonus.text = "<color=cyan>현재 보너스 포인트 : " + CheckFinalStageClear().ToString() + "</color>";            
         }
-
-        SceneManager.LoadScene(sceneIndex + 1);
+        else
+        {
+            SceneManager.LoadScene(sceneIndex + 1);
+        }
 
     }
 
@@ -650,14 +658,14 @@ public class GameManager : MonoBehaviour
         // 머지 카운트 저장
         MergeCountSave();
 
-        // 게임오버 카운트 저장
+        // 게임오버 카운트 저장f
         GameOverCountSave();
     }
 
     // Option Button Pressed
     public void OptionButtonPressed()
     {
-        SfxPlay(Sfx.Attach);
+        SfxPlay(Sfx.Button);
         isPaused = true;
 
         Invoke("OptionUI", 0.3f);
@@ -666,7 +674,6 @@ public class GameManager : MonoBehaviour
     // Option UI
     private void OptionUI()
     {
-        SfxPlay(Sfx.Button);
         optionUI.gameObject.SetActive(true);
 
         // 게임 플레이 UI 내 Dongle 동작 멈춤
@@ -788,11 +795,13 @@ public class GameManager : MonoBehaviour
 
     }
 
+    // Option UI > Reset Stage Button
     private void StageResetButtonSelectionUI()
     {
         stageResetButtonSelectionUI.gameObject.SetActive(true);
     }
 
+    // Option UI > Reset Stage Button > YES/NO
     public void StageResetButtonSelectionUIYesButton()
     {
         SfxPlay(Sfx.Button);
@@ -900,6 +909,32 @@ public class GameManager : MonoBehaviour
         SfxPlay(Sfx.Button);
         exitButtonSelectionUI.gameObject.SetActive(false);
     }
+
+
+    /* 해상도 설정하는 함수 */
+    public void SetResolution()
+    {
+        int setWidth = 1980; // 사용자 설정 너비
+        int setHeight = 938; // 사용자 설정 높이
+
+        int deviceWidth = Screen.width; // 기기 너비 저장
+        int deviceHeight = Screen.height; // 기기 높이 저장
+
+        Screen.SetResolution(setWidth, (int)(((float)deviceHeight / deviceWidth) * setWidth), true); // SetResolution 함수 제대로 사용하기
+
+        if ((float)setWidth / setHeight < (float)deviceWidth / deviceHeight) // 기기의 해상도 비가 더 큰 경우
+        {
+            float newWidth = ((float)setWidth / setHeight) / ((float)deviceWidth / deviceHeight); // 새로운 너비
+            Camera.main.rect = new Rect((1f - newWidth) / 2f, 0f, newWidth, 1f); // 새로운 Rect 적용
+        }
+        else // 게임의 해상도 비가 더 큰 경우
+        {
+            float newHeight = ((float)deviceWidth / deviceHeight) / ((float)setWidth / setHeight); // 새로운 높이
+            Camera.main.rect = new Rect(0f, (1f - newHeight) / 2f, 1f, newHeight); // 새로운 Rect 적용
+        }
+    }
+
+
 
 
 
@@ -1198,7 +1233,12 @@ public class GameManager : MonoBehaviour
 
     // Item1_LifeRecoveryPressed
     public void LifeRecoveryPressed()
-    {        
+    {
+        if (isOver || isClear)
+        {
+            return;
+        }
+
         SfxPlay(Sfx.Button);
         lifeRecovery_ItemButtonEffect.gameObject.SetActive(false);
 
@@ -1224,6 +1264,11 @@ public class GameManager : MonoBehaviour
     // Item2_SummonDonglesPressed
     public void SummonDonglesPressed()
     {
+        if (isOver || isClear)
+        {
+            return;
+        }
+
         SfxPlay(Sfx.Button);
         summonDongles_ItemButtonEffect.gameObject.SetActive(false);
 
@@ -1249,6 +1294,11 @@ public class GameManager : MonoBehaviour
     // Item3_UnbreakablePressed
     public void UnbreakablePressed()
     {
+        if (isOver || isClear)
+        {
+            return;
+        }
+
         SfxPlay(Sfx.Button);
         unbreakable_ItemButtonEffect.gameObject.SetActive(false);
 
@@ -1274,6 +1324,11 @@ public class GameManager : MonoBehaviour
     // Item4_LevelUpAllPressed
     public void LevelUpAllPressed()
     {
+        if (isOver || isClear)
+        {
+            return;
+        }
+
         SfxPlay(Sfx.Button);
         levelUpAll_ItemButtonEffect.gameObject.SetActive(false);
 
